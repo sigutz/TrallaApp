@@ -1,0 +1,15 @@
+# Ignore the .env file containing secrets (CRITICAL)
+.env
+
+# Ignore Visual Studio & OS files
+.vscode/
+.idea/
+.DS_Store
+[Bb]in/
+[Oo]bj/
+
+# Ignore user-specific configs
+*.user
+
+# Ignore Docker volumes if they accidentally get created locally
+mysql-data/
