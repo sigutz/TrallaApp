@@ -1,8 +1,8 @@
 # TrallaApp - Platforma de Task Management - Proiect ASP.NET Core MCV
 
 ### Echipa:
-1. **Barcan Silviu-Ioan** [@sigutz](https://github.com/sigutz) -> Grupa 244
-2. **Cocut Ioana-Maria** [@ioanyaa](https://github.com/ioanyaa) -> Grupa 244
+1. **Barcan Silviu-Ioan** [@sigutz](https://github.com/sigutz) - Grupa 244
+2. **Cocut Ioana-Maria** [@ioanyaa](https://github.com/ioanyaa) - Grupa 244
 
 
 Aceasta aplicatie este o platforma de gestionare a task-urilor si proiectelor precum Trello, dezvoltata pemtru laboratorul de Dezvoltarea Aplicatiilor Web 2025-2026. <br />
