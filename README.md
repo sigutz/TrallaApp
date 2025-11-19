@@ -16,11 +16,11 @@ Aplicatia permite utilizatorilor sa creeze proiecte, sa invite membrii, sa gesti
 
 -----
 
-# 🐳 TrallaApp - Ghid de Instalare și Rulare (Docker)
+## 🐳 TrallaApp - Ghid de Instalare și Rulare (Docker)
 
 Acest ghid explică cum să configurezi și să rulezi aplicația folosind Docker, inclusiv pașii pentru prima configurare a bazei de date și procedurile pentru update-uri majore.
 
-## 1\. Instalare Docker Desktop
+### 1\. Instalare Docker Desktop
 
 Înainte de a începe, asigură-te că ai Docker Desktop instalat și pornit pe mașina ta.
 
@@ -28,7 +28,7 @@ Acest ghid explică cum să configurezi și să rulezi aplicația folosind Docke
   * **MacOS:** [Instrucțiuni de instalare](https://docs.docker.com/desktop/setup/install/mac-install/) 
   * **Linux:** [Instrucțiuni de instalare](https://docs.docker.com/desktop/setup/install/linux/)
 
-## 2\. Clonare Repo
+### 2\. Clonare Repo
 
 Descarcă proiectul pe calculatorul tău:
 
@@ -37,14 +37,14 @@ git clone https://github.com/sigutz/TrallaApp.git
 cd TrallaApp
 ```
 
-## 3\. Configurare Environment
+### 3\. Configurare Environment
 
 Creează un fișier numit `.env` în **root-ul proiectului** (lângă `docker-compose.yml`).
 Copiază în el variabilele de mediu pe care ți le-am trimis în privat.
 
 > **Notă:** Asigură-te că variabila `DOCKER_PROJECT_NAME` din fișier corespunde cu numele folderului proiectului.
 
-## 4\. Pornire Aplicație
+### 4\. Pornire Aplicație
 
 Deschide un terminal în folderul proiectului și rulează comanda pentru a descărca imaginile și a porni containerele în fundal:
 
@@ -54,9 +54,10 @@ docker compose up -d
 
 Așteaptă câteva momente până când containerele sunt active.
 
-## 5\. Configurarea Inițială a Bazei de Date și Instalarea Dependențelor(Doar la prima rulare)
+### 5\. Configurarea Inițială a Bazei de Date și Instalarea Dependențelor(Doar la prima rulare)
 Înainte de a crea migrația, trebuie să instalăm uneltele necesare în interiorul containerului care rulează deja.
 Rulează aceste comenzi pe rând pentru a instala tool-ul de Entity Framework și driverul de MySQL:
+
 ```bash
 # 1. Instalează tool-ul global dotnet-ef
 docker compose exec app dotnet tool install --global dotnet-ef --version 9.0.11
@@ -101,7 +102,7 @@ Acum aplicația ar trebui să fie accesibilă la `http://localhost:8080` (sau po
 
 -----
 
-## ⚠️ Procedură Update Major (Versiuni v X.Y.Z)
+## Procedură Update Major (Versiuni v X.Y.Z)
 
 Proiectul folosește versionare semantică (`v X.Y.Z`).
 
