@@ -24,9 +24,9 @@ Acest ghid explică cum să configurezi și să rulezi aplicația folosind Docke
 
 Înainte de a începe, asigură-te că ai Docker Desktop instalat și pornit pe mașina ta.
 
-  * [cite\_start]**Windows:** [Instrucțiuni de instalare](https://docs.docker.com/desktop/setup/install/windows-install/) [cite: 37]
-  * [cite\_start]**MacOS:** [Instrucțiuni de instalare](https://docs.docker.com/desktop/setup/install/mac-install/) [cite: 90]
-  * [cite\_start]**Linux:** [Instrucțiuni de instalare](https://docs.docker.com/desktop/setup/install/linux/) [cite: 123]
+  * **Windows:** [Instrucțiuni de instalare](https://docs.docker.com/desktop/setup/install/windows-install/) 
+  * **MacOS:** [Instrucțiuni de instalare](https://docs.docker.com/desktop/setup/install/mac-install/) 
+  * **Linux:** [Instrucțiuni de instalare](https://docs.docker.com/desktop/setup/install/linux/)
 
 ## 2\. Clonare Repo
 
@@ -42,11 +42,11 @@ cd TrallaApp
 Creează un fișier numit `.env` în **root-ul proiectului** (lângă `docker-compose.yml`).
 Copiază în el variabilele de mediu pe care ți le-am trimis în privat.
 
-> [cite\_start]**Notă:** Asigură-te că variabila `DOCKER_PROJECT_NAME` din fișier corespunde cu numele folderului proiectului[cite: 251].
+> **Notă:** Asigură-te că variabila `DOCKER_PROJECT_NAME` din fișier corespunde cu numele folderului proiectului.
 
 ## 4\. Pornire Aplicație
 
-[cite\_start]Deschide un terminal în folderul proiectului și rulează comanda pentru a descărca imaginile și a porni containerele în fundal[cite: 179]:
+Deschide un terminal în folderul proiectului și rulează comanda pentru a descărca imaginile și a porni containerele în fundal:
 
 ```bash
 docker compose up -d
@@ -56,7 +56,7 @@ Așteaptă câteva momente până când containerele sunt active.
 
 ## 5\. Configurarea Inițială a Bazei de Date (Doar la prima rulare)
 
-Deoarece rulezi proiectul într-un container nou, baza de date este goală. [cite\_start]Trebuie să generăm și să aplicăm migrațiile[cite: 185].
+Deoarece rulezi proiectul într-un container nou, baza de date este goală. Trebuie să generăm și să aplicăm migrațiile.
 
 Rulează următoarele comenzi în ordine:
 
@@ -66,7 +66,6 @@ Rulează următoarele comenzi în ordine:
     docker compose stop app
     ```
 
-    [cite\_start][cite: 223]
 
 2.  **Generează Migrația Inițială:**
 
@@ -74,7 +73,7 @@ Rulează următoarele comenzi în ordine:
     docker compose run --rm app sh -c "cd /src/TrallaApp && dotnet ef migrations add InitialMigration"
     ```
 
-    [cite\_start]*(Notă: Dacă primești eroare de path, verifică dacă numele folderului din container este diferit de `/src/TrallaApp`)*[cite: 224].
+    *(Notă: Dacă primești eroare de path, verifică dacă numele folderului din container este diferit de `/src/TrallaApp`)*.
 
 3.  **Repornește aplicația:**
 
@@ -82,7 +81,6 @@ Rulează următoarele comenzi în ordine:
     docker compose start app
     ```
 
-    [cite\_start][cite: 226]
 
 4.  **Aplică Migrația pe Baza de Date:**
 
@@ -90,9 +88,8 @@ Rulează următoarele comenzi în ordine:
     docker compose exec app dotnet ef database update
     ```
 
-    [cite\_start][cite: 231]
 
-[cite\_start]Acum aplicația ar trebui să fie accesibilă la `http://localhost:8080` (sau portul definit în configurare)[cite: 238].
+Acum aplicația ar trebui să fie accesibilă la `http://localhost:8080` (sau portul definit în configurare).
 
 -----
 
