@@ -70,7 +70,7 @@ Rulează următoarele comenzi în ordine:
 2.  **Generează Migrația Inițială:**
 
     ```bash
-    docker compose run --rm app sh -c "cd /src/TrallaApp && dotnet ef migrations add InitialMigration"
+    docker compose run --rm app sh -c "cd /src/DockerProject && dotnet ef migrations add InitialMigration"
     ```
 
     *(Notă: Dacă primești eroare de path, verifică dacă numele folderului din container este diferit de `/src/TrallaApp`)*.
@@ -110,7 +110,7 @@ Proiectul folosește versionare semantică (`v X.Y.Z`).
 2.  **Creează Migrația de Update** (Dă-i un nume relevant, ex: `Update_v2`):
 
     ```bash
-    docker compose run --rm app sh -c "cd /src/TrallaApp && dotnet ef migrations add Update_Major_vX"
+    docker compose run --rm app sh -c "cd /src/DockerProject && dotnet ef migrations add Update_Major_vX"
     ```
 
 3.  **Pornește aplicația:**
