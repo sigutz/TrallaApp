@@ -1,4 +1,5 @@
-# TrallaApp - Platforma de Task Management - Proiect ASP.NET Core MCV
+# TrallaApp - Platforma de Task Management
+## Proiect ASP.NET Core MCV
 
 ### Echipa:
 1. **Barcan Silviu-Ioan** [@sigutz](https://github.com/sigutz) - Grupa 244
