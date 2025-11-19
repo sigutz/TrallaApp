@@ -125,7 +125,6 @@ Proiectul folosește versionare semantică (`v X.Y.Z`).
     docker compose exec app dotnet ef database update
     ```
 ---
----
 
 ## Checklist cerinte:
 
