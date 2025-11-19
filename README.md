@@ -54,8 +54,16 @@ docker compose up -d
 
 Așteaptă câteva momente până când containerele sunt active.
 
-## 5\. Configurarea Inițială a Bazei de Date (Doar la prima rulare)
+## 5\. Configurarea Inițială a Bazei de Date și Instalarea Dependențelor(Doar la prima rulare)
+Înainte de a crea migrația, trebuie să instalăm uneltele necesare în interiorul containerului care rulează deja.
+Rulează aceste comenzi pe rând pentru a instala tool-ul de Entity Framework și driverul de MySQL:
+```bash
+# 1. Instalează tool-ul global dotnet-ef
+docker compose exec app dotnet tool install --global dotnet-ef --version 9.0.11
 
+# 2. Adaugă pachetul pentru MySQL (necesar pentru conexiune)
+docker compose exec app dotnet add package Pomelo.EntityFrameworkCore.MySql
+```
 Deoarece rulezi proiectul într-un container nou, baza de date este goală. Trebuie să generăm și să aplicăm migrațiile.
 
 Rulează următoarele comenzi în ordine:
