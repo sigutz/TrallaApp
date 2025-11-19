@@ -14,6 +14,120 @@ Aplicatia permite utilizatorilor sa creeze proiecte, sa invite membrii, sa gesti
 - **ORM:** Entity Framework Core
 - **Baza de date:**
 
+-----
+
+# 🐳 TrallaApp - Ghid de Instalare și Rulare (Docker)
+
+Acest ghid explică cum să configurezi și să rulezi aplicația folosind Docker, inclusiv pașii pentru prima configurare a bazei de date și procedurile pentru update-uri majore.
+
+## 1\. Instalare Docker Desktop
+
+Înainte de a începe, asigură-te că ai Docker Desktop instalat și pornit pe mașina ta.
+
+  * [cite\_start]**Windows:** [Instrucțiuni de instalare](https://docs.docker.com/desktop/setup/install/windows-install/) [cite: 37]
+  * [cite\_start]**MacOS:** [Instrucțiuni de instalare](https://docs.docker.com/desktop/setup/install/mac-install/) [cite: 90]
+  * [cite\_start]**Linux:** [Instrucțiuni de instalare](https://docs.docker.com/desktop/setup/install/linux/) [cite: 123]
+
+## 2\. Clonare Repo
+
+Descarcă proiectul pe calculatorul tău:
+
+```bash
+git clone https://github.com/sigutz/TrallaApp.git
+cd TrallaApp
+```
+
+## 3\. Configurare Environment
+
+Creează un fișier numit `.env` în **root-ul proiectului** (lângă `docker-compose.yml`).
+Copiază în el variabilele de mediu pe care ți le-am trimis în privat.
+
+> [cite\_start]**Notă:** Asigură-te că variabila `DOCKER_PROJECT_NAME` din fișier corespunde cu numele folderului proiectului[cite: 251].
+
+## 4\. Pornire Aplicație
+
+[cite\_start]Deschide un terminal în folderul proiectului și rulează comanda pentru a descărca imaginile și a porni containerele în fundal[cite: 179]:
+
+```bash
+docker compose up -d
+```
+
+Așteaptă câteva momente până când containerele sunt active.
+
+## 5\. Configurarea Inițială a Bazei de Date (Doar la prima rulare)
+
+Deoarece rulezi proiectul într-un container nou, baza de date este goală. [cite\_start]Trebuie să generăm și să aplicăm migrațiile[cite: 185].
+
+Rulează următoarele comenzi în ordine:
+
+1.  **Oprește containerul aplicației** (pentru a elibera fișierele):
+
+    ```bash
+    docker compose stop app
+    ```
+
+    [cite\_start][cite: 223]
+
+2.  **Generează Migrația Inițială:**
+
+    ```bash
+    docker compose run --rm app sh -c "cd /src/TrallaApp && dotnet ef migrations add InitialMigration"
+    ```
+
+    [cite\_start]*(Notă: Dacă primești eroare de path, verifică dacă numele folderului din container este diferit de `/src/TrallaApp`)*[cite: 224].
+
+3.  **Repornește aplicația:**
+
+    ```bash
+    docker compose start app
+    ```
+
+    [cite\_start][cite: 226]
+
+4.  **Aplică Migrația pe Baza de Date:**
+
+    ```bash
+    docker compose exec app dotnet ef database update
+    ```
+
+    [cite\_start][cite: 231]
+
+[cite\_start]Acum aplicația ar trebui să fie accesibilă la `http://localhost:8080` (sau portul definit în configurare)[cite: 238].
+
+-----
+
+## ⚠️ Procedură Update Major (Versiuni v X.Y.Z)
+
+Proiectul folosește versionare semantică (`v X.Y.Z`).
+
+**Regulă:** De fiecare dată când **Major Version (X)** se schimbă (ex: treci de la v1.2.0 la v2.0.0), înseamnă că au existat modificări structurale în baza de date. Trebuie să rulezi manual o nouă migrație.
+
+### Pași pentru update de versiune majoră:
+
+1.  **Oprește aplicația:**
+
+    ```bash
+    docker compose stop app
+    ```
+
+2.  **Creează Migrația de Update** (Dă-i un nume relevant, ex: `Update_v2`):
+
+    ```bash
+    docker compose run --rm app sh -c "cd /src/TrallaApp && dotnet ef migrations add Update_Major_vX"
+    ```
+
+3.  **Pornește aplicația:**
+
+    ```bash
+    docker compose start app
+    ```
+
+4.  **Actualizează Baza de Date:**
+
+    ```bash
+    docker compose exec app dotnet ef database update
+    ```
+---
 ---
 
 ## Checklist cerinte:
