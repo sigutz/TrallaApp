@@ -17,15 +17,15 @@ public class SeedData
             context.Roles.AddRange(
                 new IdentityRole
                 {
-                    Id = "2c5e174e-3b0e-446f-86af-483d 56fd7210", Name = "Admin", NormalizedName = "Admin".ToUpper()
+                    Id = "2c5e174e-3b0e-446f-86af-483d-56fd7210", Name = "Admin", NormalizedName = "Admin".ToUpper()
                 },
                 new IdentityRole
                 {
-                    Id = "2c5e174e-3b0e-446f-86af-483d 56fd7211", Name = "Editor", NormalizedName = "Editor".ToUpper()
+                    Id = "2c5e174e-3b0e-446f-86af-483d-56fd7211", Name = "Editor", NormalizedName = "Editor".ToUpper()
                 },
                 new IdentityRole
                 {
-                    Id = "2c5e174e-3b0e-446f-86af-483d 56fd7212", Name = "User", NormalizedName = "User".ToUpper()
+                    Id = "2c5e174e-3b0e-446f-86af-483d-56fd7212", Name = "User", NormalizedName = "User".ToUpper()
                 });
 
             var hasher = new PasswordHasher<ApplicationUser>();
