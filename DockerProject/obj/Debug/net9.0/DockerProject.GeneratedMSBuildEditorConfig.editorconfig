@@ -17,49 +17,49 @@ build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property.RootNamespace = DockerProject
 build_property.RootNamespace = DockerProject
-build_property.ProjectDir = /src/DockerProject/
+build_property.ProjectDir = /home/sigutz/Documents/FMI/II/1/DotNET/TrallaApp/DockerProject/
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 
 build_property.RazorLangVersion = 9.0
 build_property.SupportLocalizedComponentNames = 
 build_property.GenerateRazorMetadataSourceChecksumAttributes = 
-build_property.MSBuildProjectDirectory = /src/DockerProject
+build_property.MSBuildProjectDirectory = /home/sigutz/Documents/FMI/II/1/DotNET/TrallaApp/DockerProject
 build_property._RazorSourceGeneratorDebug = 
 build_property.EffectiveAnalysisLevelStyle = 9.0
 build_property.EnableCodeStyleSeverity = 
 
-[/src/DockerProject/Areas/Identity/Pages/_ViewStart.cshtml]
+[/home/sigutz/Documents/FMI/II/1/DotNET/TrallaApp/DockerProject/Areas/Identity/Pages/_ViewStart.cshtml]
 build_metadata.AdditionalFiles.TargetPath = QXJlYXMvSWRlbnRpdHkvUGFnZXMvX1ZpZXdTdGFydC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[/src/DockerProject/Views/Home/Index.cshtml]
+[/home/sigutz/Documents/FMI/II/1/DotNET/TrallaApp/DockerProject/Views/Home/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvSG9tZS9JbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[/src/DockerProject/Views/Home/Privacy.cshtml]
+[/home/sigutz/Documents/FMI/II/1/DotNET/TrallaApp/DockerProject/Views/Home/Privacy.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvSG9tZS9Qcml2YWN5LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[/src/DockerProject/Views/Shared/Error.cshtml]
+[/home/sigutz/Documents/FMI/II/1/DotNET/TrallaApp/DockerProject/Views/Shared/Error.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvU2hhcmVkL0Vycm9yLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[/src/DockerProject/Views/Shared/_LoginPartial.cshtml]
+[/home/sigutz/Documents/FMI/II/1/DotNET/TrallaApp/DockerProject/Views/Shared/_LoginPartial.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvU2hhcmVkL19Mb2dpblBhcnRpYWwuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[/src/DockerProject/Views/Shared/_ValidationScriptsPartial.cshtml]
+[/home/sigutz/Documents/FMI/II/1/DotNET/TrallaApp/DockerProject/Views/Shared/_ValidationScriptsPartial.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvU2hhcmVkL19WYWxpZGF0aW9uU2NyaXB0c1BhcnRpYWwuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[/src/DockerProject/Views/_ViewImports.cshtml]
+[/home/sigutz/Documents/FMI/II/1/DotNET/TrallaApp/DockerProject/Views/_ViewImports.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvX1ZpZXdJbXBvcnRzLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[/src/DockerProject/Views/_ViewStart.cshtml]
+[/home/sigutz/Documents/FMI/II/1/DotNET/TrallaApp/DockerProject/Views/_ViewStart.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvX1ZpZXdTdGFydC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[/src/DockerProject/Views/Shared/_Layout.cshtml]
+[/home/sigutz/Documents/FMI/II/1/DotNET/TrallaApp/DockerProject/Views/Shared/_Layout.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvU2hhcmVkL19MYXlvdXQuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = b-2l82o22tx9

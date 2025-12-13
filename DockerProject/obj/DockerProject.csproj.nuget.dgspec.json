@@ -1,25 +1,26 @@
 {
   "format": 1,
   "restore": {
-    "/src/DockerProject/DockerProject.csproj": {}
+    "/home/sigutz/Documents/FMI/II/1/DotNET/TrallaApp/DockerProject/DockerProject.csproj": {}
   },
   "projects": {
-    "/src/DockerProject/DockerProject.csproj": {
+    "/home/sigutz/Documents/FMI/II/1/DotNET/TrallaApp/DockerProject/DockerProject.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/src/DockerProject/DockerProject.csproj",
+        "projectUniqueName": "/home/sigutz/Documents/FMI/II/1/DotNET/TrallaApp/DockerProject/DockerProject.csproj",
         "projectName": "DockerProject",
-        "projectPath": "/src/DockerProject/DockerProject.csproj",
-        "packagesPath": "/root/.nuget/packages/",
-        "outputPath": "/src/DockerProject/obj/",
+        "projectPath": "/home/sigutz/Documents/FMI/II/1/DotNET/TrallaApp/DockerProject/DockerProject.csproj",
+        "packagesPath": "/home/sigutz/.nuget/packages/",
+        "outputPath": "/home/sigutz/Documents/FMI/II/1/DotNET/TrallaApp/DockerProject/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/root/.nuget/NuGet/NuGet.Config"
+          "/home/sigutz/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net9.0"
         ],
         "sources": {
+          "/usr/lib/dotnet/library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -38,12 +39,16 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "9.0.300"
+        "SdkAnalysisLevel": "9.0.100"
       },
       "frameworks": {
         "net9.0": {
           "targetAlias": "net9.0",
           "dependencies": {
+            "DotNetEnv": {
+              "target": "Package",
+              "version": "[3.1.1, )"
+            },
             "Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore": {
               "target": "Package",
               "version": "[9.0.11, )"
@@ -53,6 +58,10 @@
               "version": "[9.0.11, )"
             },
             "Microsoft.AspNetCore.Identity.UI": {
+              "target": "Package",
+              "version": "[9.0.11, )"
+            },
+            "Microsoft.EntityFrameworkCore": {
               "target": "Package",
               "version": "[9.0.11, )"
             },
@@ -88,7 +97,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.307/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/9.0.112/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
