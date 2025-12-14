@@ -18,6 +18,8 @@ public class Project
     
     public virtual ICollection<ApplicationUser> Members { get; set; } = new List<ApplicationUser>();
 
+    public virtual ICollection<ApplicationUser> StarredBy { get; set; } = new List<ApplicationUser>();
+
     public virtual ICollection<Field> Fields { get; set; } = new List<Field>();
 
     public virtual ICollection<ProjectTask> Tasks { get; set; } = new List<ProjectTask>();

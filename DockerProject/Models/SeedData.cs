@@ -65,15 +65,15 @@ public class SeedData
             context.UserRoles.AddRange(
                 new IdentityUserRole<string>
                 {
-                    RoleId = "2c5e174e-3b0e-446f-86af-483d 56fd7210",
+                    RoleId = "2c5e174e-3b0e-446f-86af-483d-56fd7210",
                     UserId = "66d9ca59-241b-4995-be37-b1c0011b1dd1"
                 }, new IdentityUserRole<string>
                 {
-                    RoleId = "2c5e174e-3b0e-446f-86af-483d 56fd7211",
+                    RoleId = "2c5e174e-3b0e-446f-86af-483d-56fd7211",
                     UserId = "66d9ca59-241b-4995-be37-b1c0011b1dd2"
                 }, new IdentityUserRole<string>
                 {
-                    RoleId = "2c5e174e-3b0e-446f-86af-483d 56fd7212",
+                    RoleId = "2c5e174e-3b0e-446f-86af-483d-56fd7212",
                     UserId = "66d9ca59-241b-4995-be37-b1c0011b1dd3"
                 });
             context.SaveChanges();
