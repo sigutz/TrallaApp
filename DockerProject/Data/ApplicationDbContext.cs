@@ -41,6 +41,24 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .HasForeignKey(p => p.FounderId)
             .OnDelete(DeleteBehavior.Restrict);
         
+        // 1. Define the Composite Primary Key (UserId + FriendId)
+        builder.Entity<UserFriend>()
+            .HasKey(uf => new { uf.UserId, uf.FriendId });
+
+        // 2. Configure the relationship from User -> Friend
+        builder.Entity<UserFriend>()
+            .HasOne(uf => uf.User)
+            .WithMany(u => u.Friends)
+            .HasForeignKey(uf => uf.UserId)
+            .OnDelete(DeleteBehavior.Restrict); 
+
+        // 3. Configure the other side (The Friend)
+        builder.Entity<UserFriend>()
+            .HasOne(uf => uf.Friend)
+            .WithMany() 
+            .HasForeignKey(uf => uf.FriendId)
+            .OnDelete(DeleteBehavior.Restrict); 
+        
         foreach (var entityType in builder.Model.GetEntityTypes())
         {
             foreach (var property in entityType.GetProperties())
