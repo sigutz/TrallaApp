@@ -3,6 +3,7 @@ using DockerProject.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace DockerProject.Controllers;
@@ -16,14 +17,49 @@ public class ProjectsController(
     private readonly UserManager<ApplicationUser> _userManager = userManager;
     private readonly RoleManager<IdentityRole> _roleManager = roleManager;
 
+    private void SetAccesRights()
+    {
+        ViewBag.ListaProiecteProprii = from p in _db.Projects
+            where p.FounderId == _userManager.GetUserId(User)
+            select p.Id;
+
+        ViewBag.UserCurent = _userManager.GetUserId(User);
+        ViewBag.EsteAdmin = User.IsInRole("Admin");
+    }
+
+    [NonAction]
+    public ICollection<Field> GetAllFields()
+    {
+        var selectList = new List<Field>();
+
+        var fields = _db.Fields;
+
+        foreach (var field in fields)
+        {
+            selectList.Add(field);
+        }
+
+        return selectList;
+    }
+
     [Authorize(Roles = "User,Editor,Admin")]
     public IActionResult Index()
     {
         var projects = _db.Projects
             .Include(p => p.Fields)
             .Include(p => p.Founder)
-            .Include(p => p.StarredBy);
+            .Include(p => p.StarredBy)
+            .OrderByDescending(p => p.StarredBy.Count())
+            .ThenByDescending(p => p.CreatedDate);
+
         ViewBag.Projects = projects;
+
+        if (TempData.ContainsKey("message"))
+        {
+            ViewBag.Message = TempData["message"];
+            ViewBag.Alert = TempData["messageType"];
+        }
+
         return View();
     }
 
@@ -36,12 +72,12 @@ public class ProjectsController(
             .Include(p => p.StarredBy)
             .Include(p => p.Tasks)
             .Include(p => p.Comments)
-                .ThenInclude(c => c.Author)
-            .Where(p => p.Id == id).FirstOrDefault();
+            .ThenInclude(c => c.Author)
+            .FirstOrDefault(p => p.Id == id);
 
         if (project is null)
             return NotFound();
-        
+
         return View(project);
     }
 
@@ -50,9 +86,12 @@ public class ProjectsController(
     public IActionResult New()
     {
         Project project = new Project();
+
+        project.Fields = GetAllFields();
+        
         return View(project);
     }
-    
+
     [Authorize(Roles = "User,Editor,Admin")]
     [HttpPost]
     public IActionResult New(Project project)
@@ -60,8 +99,7 @@ public class ProjectsController(
         return RedirectToAction("Index");
     }
 
-    [Authorize(Roles = "User,Editor,Admin")]
-    [HttpPost]
+    [Authorize(Roles = "Editor,Admin")]
     public IActionResult Edit(string id)
     {
         Project? project = _db.Projects.Find(id);
@@ -73,5 +111,34 @@ public class ProjectsController(
             return View(project);
 
         return RedirectToAction("Index");
+    }
+
+    [Authorize(Roles = "Editor,Admin")]
+    [HttpPost]
+    public IActionResult Edit(string id, Project reqProject)
+    {
+        Project? project = _db.Projects.Find(id);
+
+        if (project is null)
+            return NotFound();
+
+        if (project.FounderId == _userManager.GetUserId(User) || User.IsInRole("Admin"))
+        {
+            try
+            {
+                project.Title = reqProject.Title;
+                project.Description = reqProject.Description;
+                project.Fields = reqProject.Fields;
+                _db.SaveChanges();
+                return RedirectToAction("Index");
+            }
+            catch (Exception)
+            {
+                ViewBag.Project = project;
+                return View(project);
+            }
+        }
+
+        return Forbid();
     }
 }
