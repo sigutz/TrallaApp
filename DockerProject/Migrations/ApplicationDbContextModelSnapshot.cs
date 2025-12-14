@@ -36,7 +36,24 @@ namespace DockerProject.Migrations
 
                     b.HasIndex("MembersId");
 
-                    b.ToTable("ApplicationUserProject");
+                    b.ToTable("ProjectMembers", (string)null);
+                });
+
+            modelBuilder.Entity("ApplicationUserProject1", b =>
+                {
+                    b.Property<string>("StarredById")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("StarredId")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("StarredById", "StarredId");
+
+                    b.HasIndex("StarredId");
+
+                    b.ToTable("ProjectStars", (string)null);
                 });
 
             modelBuilder.Entity("ApplicationUserProjectTask", b =>
@@ -497,6 +514,21 @@ namespace DockerProject.Migrations
                     b.HasOne("DockerProject.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("MembersId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ApplicationUserProject1", b =>
+                {
+                    b.HasOne("DockerProject.Models.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("StarredById")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DockerProject.Models.Project", null)
+                        .WithMany()
+                        .HasForeignKey("StarredId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

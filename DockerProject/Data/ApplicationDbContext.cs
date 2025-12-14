@@ -17,23 +17,30 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<ApplicationUser> ApplicationUsers { get; set; }
     public DbSet<Field> Fields { get; set; }
     public DbSet<Comment> Comments { get; set; }
-    
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
-        
+
         builder.Entity<CommentVote>()
             .HasKey(cv => new { cv.UserId, cv.CommentId });
 
         builder.Entity<Project>()
             .HasMany(p => p.Members)
-            .WithMany(u => u.MemberOf);
+            .WithMany(u => u.MemberOf)
+            .UsingEntity(j => j.ToTable("ProjectMembers"));
+
+        builder.Entity<Project>()
+            .HasMany(p => p.StarredBy)
+            .WithMany(u => u.Starred)
+            .UsingEntity(j => j.ToTable("ProjectStars"));
 
         builder.Entity<Project>()
             .HasOne(p => p.Founder)
             .WithMany()
             .HasForeignKey(p => p.FounderId)
             .OnDelete(DeleteBehavior.Restrict);
+        
         foreach (var entityType in builder.Model.GetEntityTypes())
         {
             foreach (var property in entityType.GetProperties())
