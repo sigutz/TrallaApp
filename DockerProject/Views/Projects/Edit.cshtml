@@ -4,5 +4,34 @@
     ViewBag.Title = "title";
     Layout = "_Layout";
 }
+<h2>Edit this project!</h2>
 
-<h2>title</h2>
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-6 offset-3">
+            <form method="post" asp-action="Edit" asp-controller="Projects">
+                <div class="form-group">
+                    <label asp-for="Title" class="form-label">Titlu Proiect</label>
+                    <br />
+                    <input asp-for="Title" class="form-control" value="@Model.Title" />
+
+                    <!-- Mesaj de validare pentru titlu -->
+                    <span asp-validation-for="Title" class="text-danger"></span>
+                    <br /><br />
+                </div>
+                
+                <div class="form-group">
+                    <label asp-for="Description" class="form-label">Descrierea Proiectului</label>
+                    <br />
+                    <textarea asp-for="Description" class="form-control summernote" aria-valuetext="@Model.Description"></textarea>
+
+                    <span asp-validation-for="Description" class="text-danger"></span>
+
+                    <br /><br />
+                </div>
+                <br>
+                <button class="btn btn-outline-info" type="submit">Editare</button>
+            </form>
+        </div>
+    </div>
+</div>

@@ -55,7 +55,7 @@ app.MapControllerRoute(
 
 app.MapControllerRoute(
     name: "projects",
-    pattern: "{controller=Projects}/{action=Index}/{id?}").WithStaticAssets();
+    pattern: "{controller=Projects}/{action=Index}/{userid?}").WithStaticAssets();
 
 app.MapRazorPages()
     .WithStaticAssets();
