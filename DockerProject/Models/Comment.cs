@@ -8,6 +8,7 @@ public class Comment
 
     [MaxLength(500)] public string Content { get; set; } = string.Empty;
 
+    public DateTime Date { get; set; }
 
     public string AuthorId { get; set; } 
 

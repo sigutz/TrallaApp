@@ -45,12 +45,14 @@ public class ProjectsController(
     [Authorize(Roles = "User,Editor,Admin")]
     public IActionResult Index()
     {
+        SetAccesRights();
+        
         var projects = _db.Projects
             .Include(p => p.Fields)
             .Include(p => p.Founder)
             .Include(p => p.StarredBy)
             .OrderByDescending(p => p.StarredBy.Count())
-            .ThenByDescending(p => p.CreatedDate);
+            .ThenBy(p => p.CreatedDate);
 
         ViewBag.Projects = projects;
 
@@ -61,6 +63,33 @@ public class ProjectsController(
         }
 
         return View();
+    }
+
+    [Authorize(Roles = "User,Editor,Admin")]
+    public IActionResult Profile(string userid)
+    {
+        SetAccesRights();
+
+        if (_db.ApplicationUsers.Find(userid) is null)
+            return NotFound();
+
+        var projects = _db.Projects
+            .Include(p => p.Fields)
+            .Include(p => p.Founder)
+            .Include(p => p.StarredBy)
+            .OrderByDescending(p => p.StarredBy.Count())
+            .ThenBy(p => p.CreatedDate)
+            .Where(p => p.FounderId == userid);
+
+        ViewBag.Projects = projects;
+
+        if (TempData.ContainsKey("message"))
+        {
+            ViewBag.Message = TempData["message"];
+            ViewBag.Alert = TempData["messageType"];
+        }
+
+        return View("Index");
     }
 
     [Authorize(Roles = "User,Editor,Admin")]
@@ -88,7 +117,7 @@ public class ProjectsController(
         Project project = new Project();
 
         project.Fields = GetAllFields();
-        
+
         return View(project);
     }
 
@@ -96,10 +125,16 @@ public class ProjectsController(
     [HttpPost]
     public IActionResult New(Project project)
     {
+        project.FounderId = _userManager.GetUserId(User);
+        project.CreatedDate = DateTime.Now;
+
+        _db.Projects.Add(project);
+        _db.SaveChanges();
+        
         return RedirectToAction("Index");
     }
 
-    [Authorize(Roles = "Editor,Admin")]
+    [Authorize(Roles = "User,Editor,Admin")]
     public IActionResult Edit(string id)
     {
         Project? project = _db.Projects.Find(id);
@@ -113,7 +148,7 @@ public class ProjectsController(
         return RedirectToAction("Index");
     }
 
-    [Authorize(Roles = "Editor,Admin")]
+    [Authorize(Roles = "User,Editor,Admin")]
     [HttpPost]
     public IActionResult Edit(string id, Project reqProject)
     {
@@ -141,4 +176,21 @@ public class ProjectsController(
 
         return Forbid();
     }
+
+    [HttpPost]
+    [Authorize(Roles = "User,Editor,Admin")]
+    public ActionResult Delete(string projectid)
+    {
+        Project? project = _db.Projects.Find(projectid);
+
+        if (project is null)
+            return NotFound();
+        if (_userManager.GetUserId(User) != project.FounderId && !User.IsInRole("Admin"))
+            return Forbid();
+
+        _db.Projects.Remove(project);
+        _db.SaveChanges();
+        return RedirectToAction("Index");
+    }
+    
 }

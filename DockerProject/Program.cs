@@ -22,6 +22,7 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.R
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
+
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -51,9 +52,11 @@ app.MapControllerRoute(
         name: "default",
         pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
+
 app.MapControllerRoute(
     name: "projects",
-    pattern: "{controller=Projects}/{action=Index}/{id?}").WithStaticAssets();
+    pattern: "{controller=Projects}/{action=Index}/{userid?}").WithStaticAssets();
+
 app.MapRazorPages()
     .WithStaticAssets();
 
