@@ -53,8 +53,7 @@ public class ApplicationUser : IdentityUser
     
     public Theme PreferredTheme { get; set; } = Theme.Light;
     
-    public string? ProfilePictureUrl { get; set; }
-
+    public string? ProfilePictureUrl { get; set; } 
     public virtual ICollection<UserFriend> Friends { get; set; } = new List<UserFriend>();
     
     public virtual ICollection<Project> MemberOf { get; set; } = new List<Project>();
