@@ -1,57 +1,86 @@
-# TrallaApp - Platforma de Task Management
+# TrallaApp – Platformă de Task Management
 
-### Echipa:
-1. **Barcan Silviu-Ioan** [@sigutz](https://github.com/sigutz) - Grupa 244
-2. **Cocut Ioana-Maria** [@ioanyaa](https://github.com/ioanyaa) - Grupa 244
+## 👥 Echipa
 
+1. **Barcan Silviu-Ioan** [@sigutz](https://github.com/sigutz) – Grupa 244
+2. **Cocut Ioana-Maria** [@ioanyaa](https://github.com/ioanyaa) – Grupa 244
 
-Aceasta aplicatie este o platforma de gestionare a task-urilor si proiectelor precum Trello, dezvoltata pemtru laboratorul de Dezvoltarea Aplicatiilor Web 2025-2026. <br />
-Aplicatia permite utilizatorilor sa creeze proiecte, sa invite membrii, sa gestioneze task-uri si sa genereze rezumate AI.
+---
 
-## Tehnologii Utilizate:
-- **Framework:** ASP.NET Core MCV (.NET 9)
-- **Limbaj:** C#
-- **ORM:** Entity Framework Core
-- **Baza de date:**
+TrallaApp este o aplicație web de tip **Task & Project Management** (similară cu Trello), dezvoltată pentru laboratorul **Dezvoltarea Aplicațiilor Web (2025–2026)**.
 
------
+Aplicația permite:
 
-## 🐳 TrallaApp - Ghid de Instalare și Rulare (Docker)
+* crearea și gestionarea proiectelor
+* invitarea membrilor într-un proiect
+* organizarea task-urilor
+* generarea de rezumate folosind AI
 
-Acest ghid explică cum să configurezi și să rulezi aplicația folosind Docker, inclusiv pașii pentru prima configurare a bazei de date și procedurile pentru update-uri majore.
+---
 
-### 1\. Instalare Docker Desktop
+## 🛠️ Tehnologii utilizate
 
-Înainte de a începe, asigură-te că ai Docker Desktop instalat și pornit pe mașina ta.
+* **Framework:** ASP.NET Core MVC (.NET 9)
+* **Limbaj:** C#
+* **ORM:** Entity Framework Core
+* **Bază de date:** MySQL 8.4
+* **Containerizare:** Docker & Docker Compose
 
-  * **Windows:** [Instrucțiuni de instalare](https://docs.docker.com/desktop/setup/install/windows-install/) 
-  * **MacOS:** [Instrucțiuni de instalare](https://docs.docker.com/desktop/setup/install/mac-install/) 
-  * **Linux:** [Instrucțiuni de instalare](https://docs.docker.com/desktop/setup/install/linux/)
+---
 
-### 2\. Clonare Repo
+# 🐳 Ghid de instalare și rulare (Docker)
 
-Descarcă proiectul pe calculatorul tău:
+Acest ghid explică rularea aplicației folosind Docker, inclusiv:
+
+* prima inițializare a bazei de date
+* rularea migrațiilor
+* ce trebuie făcut când dai `pull` de pe GitHub
+
+---
+
+## 1️⃣ Instalare Docker Desktop
+
+Asigură-te că Docker Desktop este instalat și pornit.
+
+* **Windows:** [https://docs.docker.com/desktop/setup/install/windows-install/](https://docs.docker.com/desktop/setup/install/windows-install/)
+* **MacOS:** [https://docs.docker.com/desktop/setup/install/mac-install/](https://docs.docker.com/desktop/setup/install/mac-install/)
+* **Linux:** [https://docs.docker.com/desktop/setup/install/linux/](https://docs.docker.com/desktop/setup/install/linux/)
+
+---
+
+## 2️⃣ Clonare repository
 
 ```bash
 git clone https://github.com/sigutz/TrallaApp.git
 cd TrallaApp
 ```
 
-### 3\. Configurare Environment
+---
 
-Creează un fișier numit `.env` în **root-ul proiectului** (lângă `docker-compose.yml`).
-Copiază în el variabilele de mediu pe care ți le-am trimis în privat.
+## 3️⃣ Configurare Environment (.env)
 
-> **Notă:** Asigură-te că variabila `DOCKER_PROJECT_NAME` din fișier corespunde cu numele folderului proiectului.
+Creează un fișier `.env` în **root-ul proiectului** (lângă `docker-compose.yml`).
 
-### 4\. Pornire Aplicație
+Copiază în el variabilele de mediu primite.
 
-Deschide un terminal în folderul proiectului și rulează comanda pentru a descărca imaginile și a porni containerele în fundal:
+> ⚠️ **Important:** valoarea `DOCKER_PROJECT_NAME` trebuie să corespundă cu numele folderului proiectului.
+
+---
+
+## 4️⃣ Pornirea aplicației
 
 ```bash
 docker compose up -d
 ```
-Așteaptă câteva momente până când containerele sunt active. Dacă sunteți pe windows și aveți probleme cu docker-ul asigurați-vă că fișierul entrypoint.sh este de tip LF nu CRLF după aceea dați rebuild (DOAR DACA INTAMPINATI PROBLEME)
+
+Așteaptă până când containerul de MySQL devine `healthy`.
+
+### 🔧 Notă pentru Windows
+
+Dacă apar erori legate de `entrypoint.sh` (semnul cel mai bun că acesta este cazul: trallaapp-app-1 din docker nu rulează):
+
+* fișierul trebuie să fie **LF**, nu **CRLF**
+* după conversie, rulează:
 
 ```bash
 docker compose down -v
@@ -59,85 +88,125 @@ docker compose build --no-cache
 docker compose up -d
 ```
 
-### 5\. Configurarea Inițială a Bazei de Date și Instalarea Dependențelor(Doar la prima rulare)
-Înainte de a crea migrația, trebuie să instalăm uneltele necesare în interiorul containerului care rulează deja.
-Rulează aceste comenzi pe rând pentru a instala tool-ul de Entity Framework și driverul de MySQL:
+---
+
+## 5️⃣ Instalarea dependențelor (.NET packages)
+
+Toate pachetele necesare sunt deja definite în fișierele `.csproj`.
+
+Nu este nevoie să instalezi pachete manual.
+
+Rulează o singură comandă:
 
 ```bash
-# 1. Instalează tool-ul global dotnet-ef
-docker compose exec app dotnet tool install --global dotnet-ef --version 9.0.11
-
-# 2. Adaugă pachetul pentru MySQL (necesar pentru conexiune)
-docker compose exec app dotnet add package Pomelo.EntityFrameworkCore.MySql
+docker compose run --rm sdk dotnet restore
 ```
-Deoarece rulezi proiectul într-un container nou, baza de date este goală. Trebuie să generăm și să aplicăm migrațiile.
 
-Rulează următoarele comenzi în ordine:
+Aceasta va instala **automat toate dependințele** proiectului.
 
-1.  **Oprește containerul aplicației** (pentru a elibera fișierele):
+---
 
-    ```bash
-    docker compose stop app
-    ```
+## 6️⃣ Migrații – prima rulare
 
+La prima rulare, baza de date este **goală**.
 
-2.  **Generează Migrația Inițială:**
+Trebuie doar să aplici migrațiile existente:
 
-    ```bash
-    docker compose run --rm app sh -c "cd /src/DockerProject && dotnet ef migrations add InitialMigration"
-    ```
+```bash
+docker compose run --rm sdk dotnet ef database update
+```
 
-    *(Notă: Dacă primești eroare de path, verifică dacă numele folderului din container este diferit de `/src/TrallaApp`)*.
+✔️ **Nu creezi migrații noi la prima rulare**
 
-3.  **Repornește aplicația:**
+---
 
-    ```bash
-    docker compose start app
-    ```
+## 7️⃣ Ce faci când dai `git pull`
 
+### 🔹 Cazul 1: Nu apar migrații noi
 
-4.  **Aplică Migrația pe Baza de Date:**
+Doar pornești aplicația:
 
-    ```bash
-    docker compose exec app dotnet ef database update
-    ```
+```bash
+docker compose up -d
+```
 
+---
 
-Acum aplicația ar trebui să fie accesibilă la `http://localhost:8080` (sau portul definit în configurare).
+### 🔹 Cazul 2: Apar migrații noi în repo
 
------
+Aplici migrațiile:
 
-## Procedură Update Major (Versiuni v X.Y.Z)
+```bash
+docker compose run --rm sdk dotnet ef database update
+```
 
-Proiectul folosește versionare semantică (`v X.Y.Z`).
+Atât. Nu trebuie nimic altceva.
 
-**Regulă:** De fiecare dată când **Major Version (X)** se schimbă (ex: treci de la v1.2.0 la v2.0.0), înseamnă că au existat modificări structurale în baza de date. Trebuie să rulezi manual o nouă migrație.
+---
 
-### Pași pentru update de versiune majoră:
+## 8️⃣ Când SE creează migrații noi
 
-1.  **Oprește aplicația:**
+Migrațiile se creează **doar** atunci când:
 
-    ```bash
-    docker compose stop app
-    ```
+* se modifică modelele (`Models/`)
+* se schimbă structura bazei de date
 
-2.  **Creează Migrația de Update** (Dă-i un nume relevant, ex: `Update_v2`):
+### Creare migrație nouă:
 
-    ```bash
-    docker compose run --rm app sh -c "cd /src/DockerProject && dotnet ef migrations add Update_Major_vX"
-    ```
+```bash
+docker compose run --rm sdk dotnet ef migrations add NumeMigrare
+```
 
-3.  **Pornește aplicația:**
+### Aplicare migrație:
 
-    ```bash
-    docker compose start app
-    ```
+```bash
+docker compose run --rm sdk dotnet ef database update
+```
 
-4.  **Actualizează Baza de Date:**
+---
 
-    ```bash
-    docker compose exec app dotnet ef database update
-    ```
+## 9️⃣ Versionare și update-uri majore
+
+Proiectul folosește **Semantic Versioning**: `vX.Y.Z`
+
+* **X (Major):** modificări structurale în DB
+* **Y (Minor):** funcționalități noi
+* **Z (Patch):** bugfix-uri
+
+### 🔥 Regula importantă
+
+➡️ Dacă **Major Version (X)** se schimbă, trebuie **obligatoriu**:
+
+```bash
+docker compose run --rm sdk dotnet ef database update
+```
+
+Migrațiile sunt deja în repo – trebuie doar aplicate.
+
+---
+
+## 🌐 Acces aplicație
+
+Aplicația este disponibilă la:
+
+```
+http://localhost:8080
+```
+
+(sau portul configurat în `docker-compose.yml`)
+
+---
+
+## ✅ TL;DR (cel mai important)
+
+```bash
+# instalare dependințe
+docker compose run --rm sdk dotnet restore
+
+# aplicare migrații (prima rulare / după pull)
+docker compose run --rm sdk dotnet ef database update
+```
+
 ---
 
 ## Checklist cerinte:
