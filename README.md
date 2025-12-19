@@ -51,8 +51,13 @@ Deschide un terminal în folderul proiectului și rulează comanda pentru a desc
 ```bash
 docker compose up -d
 ```
+Așteaptă câteva momente până când containerele sunt active. Dacă sunteți pe windows și aveți probleme cu docker-ul asigurați-vă că fișierul entrypoint.sh este de tip LF nu CRLF după aceea dați rebuild (DOAR DACA INTAMPINATI PROBLEME)
 
-Așteaptă câteva momente până când containerele sunt active.
+```bash
+docker compose down -v
+docker compose build --no-cache
+docker compose up -d
+```
 
 ### 5\. Configurarea Inițială a Bazei de Date și Instalarea Dependențelor(Doar la prima rulare)
 Înainte de a crea migrația, trebuie să instalăm uneltele necesare în interiorul containerului care rulează deja.
