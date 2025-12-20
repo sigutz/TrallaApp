@@ -6,9 +6,11 @@ public class Comment
 {
     [Key] public string Id { get; set; } = Guid.NewGuid().ToString();
 
-    [MaxLength(500)] public string Content { get; set; } = string.Empty;
+    [MaxLength(5000)] public string Content { get; set; } = string.Empty;
 
     public DateTime Date { get; set; }
+    
+    public bool IsEdited { get; set; } = false;
 
     public string AuthorId { get; set; } 
 

@@ -46,7 +46,7 @@ public class ProjectsController(
     public IActionResult Index()
     {
         SetAccesRights();
-        
+
         var projects = _db.Projects
             .Include(p => p.Fields)
             .Include(p => p.Founder)
@@ -102,6 +102,8 @@ public class ProjectsController(
             .Include(p => p.Tasks)
             .Include(p => p.Comments)
             .ThenInclude(c => c.Author)
+            .Include(p => p.Comments)
+            .ThenInclude(c => c.Votes)
             .FirstOrDefault(p => p.Id == id);
 
         if (project is null)
@@ -130,7 +132,7 @@ public class ProjectsController(
 
         _db.Projects.Add(project);
         _db.SaveChanges();
-        
+
         return RedirectToAction("Index");
     }
 
@@ -192,5 +194,4 @@ public class ProjectsController(
         _db.SaveChanges();
         return RedirectToAction("Index");
     }
-    
 }
