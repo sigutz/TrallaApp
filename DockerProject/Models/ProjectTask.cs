@@ -23,6 +23,10 @@ public class ProjectTask
     public DateTime DoneDate { get; set; }
 
     public TaskStatusEnum Status { get; set; } = TaskStatusEnum.ToDo;
+    
+    public string? ProjectParentId { get; set; }
+
+    public virtual Project? ProjectParent { get; set; }
 
     public virtual ICollection<Tag> Tags { get; set; } = new List<Tag>();
 

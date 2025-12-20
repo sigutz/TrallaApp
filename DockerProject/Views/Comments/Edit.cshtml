@@ -1,0 +1,21 @@
+﻿@model DockerProject.Models.Comment
+
+@{
+    ViewBag.Title = "title";
+    Layout = "_Layout";
+}
+
+<h2>Editare Comentariu</h2>
+
+<br>
+
+<form asp-controller="Comments" asp-action="Edit" asp-route-id="@Model.Id" method="post">
+    <div class="form-group">
+        <label asp-for="Content" class="form-label">Conținut comentariu</label>
+        <br />
+        <textarea asp-for="Content" class="form-control" aria-valuetext="@Model.Content"></textarea>
+        <span asp-validation-for="Content" class="text-danger"></span>
+    </div>
+    
+    <button class="btn btn-primary" type="submit">Editează comentariul</button>
+</form>
