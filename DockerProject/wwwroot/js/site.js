@@ -28,10 +28,9 @@ function toggleChildren(commentId) {
 
 function voteComment(commentId, isUpVote) {
     let formData = new FormData();
-    
+
     formData.append('commentId', commentId);
     formData.append('isUpVote', isUpVote);
-
     fetch('/Comments/Vote/', {
         method: 'POST',
         body: formData,
@@ -69,3 +68,35 @@ function voteComment(commentId, isUpVote) {
     }).catch(error => console.error('Error:', error));
 }
 
+function starProject(projectid) {
+    let formData = new FormData();
+    formData.append('projectid', projectid);
+    console.log('am intraat in functie');
+
+    fetch(
+        '/Projects/Add2Favorites/',
+        {
+            method: 'POST',
+            body: formData
+        }
+    ).then(response => {
+        if (response.ok)
+            return response.json();
+        throw Error(response.statusText);
+    }).then(data => {
+        if (data.success) {
+            const starCount = document.getElementById('star-count-' + projectid);
+            const starIcon = document.getElementById('star-icon-' + projectid);
+
+            if (starCount)
+                starCount.innerText = data.stars;
+
+
+            if (data.follow) {
+                starIcon.classList.replace('bi-star', 'bi-star-fill');
+            } else {
+                starIcon.classList.replace('bi-star-fill', 'bi-star');
+            }
+        }
+    }).catch(error => console.error("Error:", error));
+}
