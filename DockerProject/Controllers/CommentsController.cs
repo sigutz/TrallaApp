@@ -123,6 +123,20 @@ public class CommentsController : Controller
         }
 
         _db.SaveChanges();
-        return Redirect($"/Projects/Show/{comment.ProjectParentId}");
+        
+        var upVote = _db.CommentsVotes.Count(v => v.CommentId == commentId && v.IsUpvote);
+        var downVote = _db.CommentsVotes.Count(v => v.CommentId == commentId && v.IsUpvote == false);
+        var newScore = upVote - downVote;
+
+        // 0 -> None, 1 -> Up, -1 -> Down
+        int userStatus = 0;
+        var currentVote = _db.CommentsVotes.FirstOrDefault(v => v.CommentId == commentId && v.UserId == currentUserId);
+        if (currentVote != null)
+        {
+            userStatus = currentVote.IsUpvote ? 1 : -1;
+        }
+        
+        
+        return Json(new {success = true, score = newScore, UserStatus = userStatus});
     }
 }

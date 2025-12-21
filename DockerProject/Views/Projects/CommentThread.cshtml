@@ -24,27 +24,23 @@
         <div class="d-flex flex-column text-center">
 
             @* UPVOTE FORM *@
-            <form asp-controller="Comments" asp-action="Vote" method="post" class="">
-                <input type="hidden" name="commentId" value="@Model.Id"/>
-                <input type="hidden" name="isUpvote" value="true"/>
-                <button type="submit" class="btn btn-link p-0 text-decoration-none border-0 @textClassUp">
-                    <i class="bi @iconVoteUp fs-5 "></i>
-                </button>
-            </form>
+            <button onclick="voteComment('@Model.Id', true)" 
+                    id="btn-up-@Model.Id"
+                    class="btn btn-link p-0 text-decoration-none border-0 @textClassUp">
+                <i id="icon-up-@Model.Id" class="bi @iconVoteUp fs-5"></i>
+            </button>
 
             @* SCORE *@
-            <small class="fw-bold ">
+            <small id="score-@Model.Id" class="fw-bold">
                 @(Model.Votes.Count(v => v.IsUpvote) - Model.Votes.Count(v => !v.IsUpvote))
             </small>
 
             @* DOWNVOTE FORM *@
-            <form asp-controller="Comments" asp-action="Vote" method="post" class="">
-                <input type="hidden" name="commentId" value="@Model.Id"/>
-                <input type="hidden" name="isUpvote" value="false"/>
-                <button type="submit" class="btn btn-link p-0 text-decoration-none border-0 @textClassDown">
-                    <i class="bi @iconVoteDown fs-5"></i>
-                </button>
-            </form>
+            <button onclick="voteComment('@Model.Id', false)" 
+                    id="btn-down-@Model.Id"
+                    class="btn btn-link p-0 text-decoration-none border-0 @textClassDown">
+                <i id="icon-down-@Model.Id" class="bi @iconVoteDown fs-5"></i>
+            </button>
 
         </div>
 
