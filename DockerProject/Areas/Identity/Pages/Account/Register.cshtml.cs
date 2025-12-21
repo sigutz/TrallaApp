@@ -30,7 +30,6 @@ namespace DockerProject.Areas.Identity.Pages.Account
         private readonly IUserEmailStore<ApplicationUser> _emailStore;
         private readonly ILogger<RegisterModel> _logger;
         private readonly IEmailSender _emailSender;
-        // 1. ADDED RoleManager FIELD
         private readonly RoleManager<IdentityRole> _roleManager;
 
         public RegisterModel(
@@ -39,7 +38,6 @@ namespace DockerProject.Areas.Identity.Pages.Account
             SignInManager<ApplicationUser> signInManager,
             ILogger<RegisterModel> logger,
             IEmailSender emailSender,
-            // 2. INJECTED RoleManager HERE
             RoleManager<IdentityRole> roleManager)
         {
             _userManager = userManager;
@@ -48,7 +46,6 @@ namespace DockerProject.Areas.Identity.Pages.Account
             _signInManager = signInManager;
             _logger = logger;
             _emailSender = emailSender;
-            // 3. ASSIGNED RoleManager
             _roleManager = roleManager;
         }
 
@@ -101,16 +98,42 @@ namespace DockerProject.Areas.Identity.Pages.Account
                 {
                     _logger.LogInformation("User created a new account with password.");
 
-                    // --- 4. NEW LOGIC TO ASSIGN ROLE ---
-                    // Check if "User" role exists, if not, create it
-                    if (!await _roleManager.RoleExistsAsync("User"))
+                    // ====================================================================
+                    // UPDATED ROLE LOGIC WITH ERROR CHECKING
+                    // ====================================================================
+                    var roleName = "User";
+
+                    // 1. Ensure the role exists
+                    if (!await _roleManager.RoleExistsAsync(roleName))
                     {
-                        await _roleManager.CreateAsync(new IdentityRole("User"));
+                        var roleResult = await _roleManager.CreateAsync(new IdentityRole(roleName));
+                        if (!roleResult.Succeeded)
+                        {
+                            // If role creation failed, report errors and cleanup
+                            foreach (var error in roleResult.Errors)
+                            {
+                                ModelState.AddModelError(string.Empty, $"Error creating role: {error.Description}");
+                            }
+                            // Delete the user we just created since the setup failed
+                            await _userManager.DeleteAsync(user);
+                            return Page();
+                        }
                     }
 
-                    // Assign the user to the "User" role
-                    await _userManager.AddToRoleAsync(user, "User");
-                    // -----------------------------------
+                    // 2. Assign the user to the role and CHECK RESULT
+                    var addRoleResult = await _userManager.AddToRoleAsync(user, roleName);
+                    if (!addRoleResult.Succeeded)
+                    {
+                        // If assignment failed, report errors and cleanup
+                        foreach (var error in addRoleResult.Errors)
+                        {
+                            ModelState.AddModelError(string.Empty, $"Error adding user to role: {error.Description}");
+                        }
+                        // Delete the user we just created since the setup failed
+                        await _userManager.DeleteAsync(user);
+                        return Page();
+                    }
+                    // ====================================================================
 
                     var userId = await _userManager.GetUserIdAsync(user);
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
