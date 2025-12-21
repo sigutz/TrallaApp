@@ -11,6 +11,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
     }
 
+    // se adauga toate tabelele ce vor fi folosite pentru a se migra in baza de date
     public DbSet<Project> Projects { get; set; }
     public DbSet<ProjectTask> Tasks { get; set; }
     public DbSet<Tag> Tags { get; set; }
@@ -23,43 +24,49 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         base.OnModelCreating(builder);
 
+        // se creeaza cheia pentru tabelul asociativ (creat manual) care contorizeaza Voturile
         builder.Entity<CommentVote>()
             .HasKey(cv => new { cv.UserId, cv.CommentId });
 
+        //tabelul asociativ intre useri si din ce proiecte fac parte
         builder.Entity<Project>()
             .HasMany(p => p.Members)
             .WithMany(u => u.MemberOf)
             .UsingEntity(j => j.ToTable("ProjectMembers"));
 
+        // tabelul asociativ care contorizeaza proiectele puse de user la stared
         builder.Entity<Project>()
             .HasMany(p => p.StarredBy)
             .WithMany(u => u.Starred)
             .UsingEntity(j => j.ToTable("ProjectStars"));
 
+        // tabelul asociativ dintre un user si proiectele lui
         builder.Entity<Project>()
             .HasOne(p => p.Founder)
             .WithMany()
             .HasForeignKey(p => p.FounderId)
-            .OnDelete(DeleteBehavior.Restrict);
+            .OnDelete(DeleteBehavior.Restrict); // nu se sterge userul daca se sterge un proiect
 
+        
         builder.Entity<Comment>()
             .HasOne(c => c.ProjectParent)
             .WithMany(p => p.Comments)
             .HasForeignKey(c => c.ProjectParentId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Cascade); //nu se sterge proiectul daca se sterge un comentariu din el
 
         builder.Entity<ProjectTask>()
             .HasOne(t => t.ProjectParent)        
             .WithMany(p => p.Tasks)
             .HasForeignKey(t => t.ProjectParentId) 
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Cascade); //nu se sterge proiectul daca se sterge un task din el
 
         builder.Entity<Comment>()
             .HasOne(c => c.CommentParent)
             .WithMany()
             .HasForeignKey(c => c.CommentParentId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Cascade); // nu se sterge comentariul parinte daca se sterge unul din copiii lui
 
+        // creaza cheia pentru t.a. (creat manual) dintre un user si prietenii lui
         builder.Entity<UserFriend>()
             .HasKey(uf => new { uf.UserId, uf.FriendId });
 
@@ -67,7 +74,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .HasOne(uf => uf.User)
             .WithMany(u => u.Friends)
             .HasForeignKey(uf => uf.UserId)
-            .OnDelete(DeleteBehavior.Restrict);
+            .OnDelete(DeleteBehavior.Restrict); // nu se sterg userii daca nu mai sunt prieteni
 
         builder.Entity<UserFriend>()
             .HasOne(uf => uf.Friend)

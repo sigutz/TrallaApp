@@ -20,10 +20,15 @@
     <div class="row justify-content-center">
         <div class="col-md-10">
 
-            <div class="card shadow-sm mb-4">
+            <div class="card shadow-sm mb-4"> 
+                
+                @* facem ca numele proiectului sa fie in stanga si restul detaliilor din header in dreapta *@
                 <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+
                     <h2 class="m-0">@Model.Title</h2>
+
                     <div class="d-flex align-items-center gap-2">
+
                         <span class="badge bg-warning text-dark d-flex align-items-center gap-1 fs-6">
                             <i class="bi bi-star-fill"></i> @Model.StarredBy.Count()
                         </span>
@@ -36,13 +41,14 @@
                             </a>
 
                             <form asp-controller="Projects" asp-action="Delete" method="post" class="d-inline">
-                                <input type="hidden" name="projectid" value="@Model.Id" />
+                                <input type="hidden" name="projectid" value="@Model.Id"/>
                                 <button type="submit" class="btn btn-outline-danger btn-sm"
                                         onclick="return confirm('Are you sure you want to delete this project?');">
                                     <i class="bi bi-trash"></i> Delete
                                 </button>
                             </form>
                         }
+                        
                     </div>
                 </div>
 
@@ -104,10 +110,23 @@
                 <div class="card-header bg-light">
                     <h5 class="m-0"><i class="bi bi-chat-left-text"></i> Comments</h5>
                 </div>
+                
                 <div class="card-body">
                     @{
-                        // Only get top-level comments (ParentId is null)
-                        // Sort them by newest first
+                        /*  afisare comenatarii stil reddit
+                         *  e un dfs cu urmataorea structura
+                         * 
+                         *  View Show(_Proiect)
+                         *      Pentru fiecare _Comentariu din _Proiect fara Comentariu Parinte:
+                         *          CommentThread(_Comentariu) // e un partial view
+                         *
+                         *  PartialView CommentThread(_Comentariu)
+                         *      Afisare(_Comentariu) // nu e un partial, doar se afiseaza comentariul propriu-zis
+                         *      Pentru fiecare _ComentariuCopil al lui _Comentariu:
+                         *          CommentThread(_ComentariuCopil)
+                         */
+                        
+                        // selectam toate comentariile fara comentariu parinte
                         var topLevelComments = Model.Comments?
                             .Where(c => c.CommentParentId == null)
                             .OrderByDescending(c => c.Date);
@@ -117,7 +136,7 @@
                     {
                         @foreach (var comment in topLevelComments)
                         {
-                            // Pass the individual comment to the recursive view
+                            // Il trimitem in partial pentru afisarea sa si afisaarea recursiva a copiilor
                             <partial name="CommentThread" model="comment" />
                         }
                     }

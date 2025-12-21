@@ -5,6 +5,7 @@
     Layout = "_Layout";
 }
 <div class="body">
+    
     <div class="title">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2>@ViewBag.Title</h2>
@@ -14,20 +15,25 @@
             </a>
         </div>
     </div>
+    
     <div class="container">
-        <div class="row justify-content-evenly">
+        <div class="row justify-content-evenly"> @*  impartim afisarea proiectelor in randuri  *@
             @foreach (Project project in ViewBag.Projects)
             {
-                <div class="card col-5 p-2 m-2">
-                    <div class="row justify-content-evenly align-items-center">
-                        
+                <div class="card col-5 p-2 m-2">  @*  impartim afisarea proiectelor in coloane (pentru a creea 1x1)  *@
+                    
+                    <div class="row justify-content-evenly align-items-center"> @* afisam continutul unui proiect tot sub forma de grid *@
+
                         <div class="col-3">
+                            
                             <div class="row-cols-2">
                                 @project.Title
                             </div>
+
                             <div class="row-cols-2">
                                 <i class="bi bi-star"></i> @project.StarredBy.Count()
                             </div>
+                            
                         </div>
 
                         <div class="col-6">
@@ -45,10 +51,11 @@
                                 <a href="/Projects/Show/@project.Id" class="btn btn-outline-info">Show</a>
                             </div>
                         </div>
-                        
+
                     </div>
                 </div>
             }
         </div>
     </div>
+    
 </div>
