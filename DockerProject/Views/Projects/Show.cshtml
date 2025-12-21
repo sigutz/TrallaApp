@@ -1,5 +1,5 @@
-@model DockerProject.Models.Project
 @using Microsoft.AspNetCore.Identity
+@model Project
 
 @inject UserManager<ApplicationUser> UserManager
 @inject SignInManager<ApplicationUser> SignInManager
@@ -8,20 +8,23 @@
     ViewBag.Title = Model.Title;
     Layout = "_Layout";
 
-    ViewData["ProjectFounderId"] = Model.FounderId; 
+    ViewData["ProjectFounderId"] = Model.FounderId;
 
     var currentUserId = UserManager.GetUserId(User);
     var isAdmin = User.IsInRole("Admin");
     var isOwner = currentUserId == Model.FounderId;
     var canEdit = isAdmin || isOwner;
+
+    var userStarProject = Model.StarredBy.FirstOrDefault(s => s.Id == currentUserId);
+    var starIcon = userStarProject != null ? "bi-star-fill" : "bi-star";
 }
 
 <div class="container mt-5">
     <div class="row justify-content-center">
         <div class="col-md-10">
 
-            <div class="card shadow-sm mb-4"> 
-                
+            <div class="card shadow-sm mb-4">
+
                 @* facem ca numele proiectului sa fie in stanga si restul detaliilor din header in dreapta *@
                 <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
 
@@ -29,9 +32,13 @@
 
                     <div class="d-flex align-items-center gap-2">
 
-                        <span class="badge bg-warning text-dark d-flex align-items-center gap-1 fs-6">
-                            <i class="bi bi-star-fill"></i> @Model.StarredBy.Count()
-                        </span>
+                        <button title="Add to favorites" onclick="starProject('@Model.Id')"
+                                class="badge bg-warning text-dark d-flex align-items-center gap-1 fs-6 border-0">
+                            <i id="star-icon-@Model.Id" class="bi @starIcon fs-5"></i>
+                            <div id="star-count-@Model.Id" class="text-muted text-center">
+                                @Model.StarredBy.Count()
+                            </div>
+                        </button>
 
                         @if (canEdit)
                         {
@@ -48,7 +55,7 @@
                                 </button>
                             </form>
                         }
-                        
+
                     </div>
                 </div>
 
@@ -110,7 +117,7 @@
                 <div class="card-header bg-light">
                     <h5 class="m-0"><i class="bi bi-chat-left-text"></i> Comments</h5>
                 </div>
-                
+
                 <div class="card-body">
                     @{
                         /*  afisare comenatarii stil reddit
@@ -125,7 +132,7 @@
                          *      Pentru fiecare _ComentariuCopil al lui _Comentariu:
                          *          CommentThread(_ComentariuCopil)
                          */
-                        
+
                         // selectam toate comentariile fara comentariu parinte
                         var topLevelComments = Model.Comments?
                             .Where(c => c.CommentParentId == null)
@@ -137,7 +144,7 @@
                         @foreach (var comment in topLevelComments)
                         {
                             // Il trimitem in partial pentru afisarea sa si afisaarea recursiva a copiilor
-                            <partial name="CommentThread" model="comment" />
+                            <partial name="CommentThread" model="comment"/>
                         }
                     }
                     else
@@ -147,9 +154,9 @@
 
                     @if (SignInManager.IsSignedIn(User))
                     {
-                        <hr />
+                        <hr/>
                         <form asp-controller="Comments" asp-action="New" method="post">
-                            <input type="hidden" name="ProjectParentId" value="@Model.Id" />
+                            <input type="hidden" name="ProjectParentId" value="@Model.Id"/>
                             <div class="form-group mb-3">
                                 <label class="form-label text-muted">Add a comment:</label>
                                 <textarea name="Content" class="form-control" rows="3" required></textarea>
@@ -160,7 +167,7 @@
                     }
                     else
                     {
-                        <hr />
+                        <hr/>
                         <p class="text-muted small">
                             <a asp-area="Identity" asp-page="/Account/Login">Login</a> to leave a comment.
                         </p>

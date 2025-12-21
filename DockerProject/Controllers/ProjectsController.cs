@@ -192,4 +192,32 @@ public class ProjectsController(
         _db.SaveChanges();
         return RedirectToAction("Index");
     }
+
+    [Authorize]
+    [HttpPost]
+    public IActionResult Add2Favorites(string projectid)
+    {
+        var userId = _userManager.GetUserId(User);
+        var user = _db.ApplicationUsers.Find(userId);
+        var project = _db.Projects.Include(p => p.StarredBy).FirstOrDefault(p=> p.Id == projectid);
+
+        if (project is null)
+            return NotFound();
+        bool follow = true;
+        if (project.StarredBy.Contains(user))
+        {
+            follow = false;
+            project.StarredBy.Remove(user);
+        }
+        else
+        {
+            project.StarredBy.Add(user);
+        }
+
+        _db.SaveChanges();
+
+        var nr_likes = project.StarredBy.Count();
+        
+        return Json(new { success = true, stars = nr_likes, follow = follow });
+    }
 }
