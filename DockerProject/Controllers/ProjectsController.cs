@@ -28,7 +28,7 @@ public class ProjectsController(
     }
 
     [NonAction]
-    public ICollection<Field> GetAllFields()
+    public ICollection<Field> GetAllFields() // trebuie regandita
     {
         var selectList = new List<Field>();
 
@@ -42,7 +42,7 @@ public class ProjectsController(
         return selectList;
     }
 
-    [Authorize(Roles = "User,Editor,Admin")]
+    [Authorize]
     public IActionResult Index()
     {
         SetAccesRights();
@@ -65,8 +65,8 @@ public class ProjectsController(
         return View();
     }
 
-    [Authorize(Roles = "User,Editor,Admin")]
-    public IActionResult Profile(string userid)
+    [Authorize]
+    public IActionResult Profile(string userid) // functia asta returneaza proiectele detinute de user, trebuie inbinata cu index
     {
         SetAccesRights();
 
@@ -92,7 +92,7 @@ public class ProjectsController(
         return View("Index");
     }
 
-    [Authorize(Roles = "User,Editor,Admin")]
+    [Authorize]
     public IActionResult Show(string id)
     {
         Project? project = _db.Projects
@@ -113,7 +113,7 @@ public class ProjectsController(
     }
 
 
-    [Authorize(Roles = "User,Editor,Admin")]
+    [Authorize]
     public IActionResult New()
     {
         Project project = new Project();
@@ -123,8 +123,7 @@ public class ProjectsController(
         return View(project);
     }
 
-    [Authorize(Roles = "User,Editor,Admin")]
-    [HttpPost]
+    [Authorize] [HttpPost]
     public IActionResult New(Project project)
     {
         project.FounderId = _userManager.GetUserId(User);
@@ -136,7 +135,7 @@ public class ProjectsController(
         return RedirectToAction("Index");
     }
 
-    [Authorize(Roles = "User,Editor,Admin")]
+    [Authorize]
     public IActionResult Edit(string id)
     {
         Project? project = _db.Projects.Find(id);
@@ -150,8 +149,7 @@ public class ProjectsController(
         return RedirectToAction("Index");
     }
 
-    [Authorize(Roles = "User,Editor,Admin")]
-    [HttpPost]
+    [Authorize] [HttpPost]
     public IActionResult Edit(string id, Project reqProject)
     {
         Project? project = _db.Projects.Find(id);
@@ -179,8 +177,8 @@ public class ProjectsController(
         return Forbid();
     }
 
-    [HttpPost]
-    [Authorize(Roles = "User,Editor,Admin")]
+    
+    [Authorize] [HttpPost]
     public ActionResult Delete(string projectid)
     {
         Project? project = _db.Projects.Find(projectid);

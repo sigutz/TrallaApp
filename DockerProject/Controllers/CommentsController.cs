@@ -21,7 +21,7 @@ public class CommentsController : Controller
     }
 
     [HttpPost]
-    [Authorize(Roles = "User,Editor,Admin")]
+    [Authorize]
     public IActionResult New(Comment comment)
     {
         comment.Date = DateTime.Now;
@@ -42,7 +42,7 @@ public class CommentsController : Controller
     }
 
     [HttpPost]
-    [Authorize(Roles = "User,Editor,Admin")]
+    [Authorize]
     public IActionResult Delete(string id)
     {
         Comment? comment = _db.Comments.Find(id);
@@ -63,7 +63,7 @@ public class CommentsController : Controller
         return Redirect($"/Projects/Show/{comment.ProjectParentId}");
     }
 
-    [Authorize(Roles = "User,Editor,Admin")]
+    [Authorize]
     public IActionResult Edit(string id)
     {
         Comment? comment = _db.Comments.Find(id);
@@ -87,7 +87,6 @@ public class CommentsController : Controller
     public IActionResult Vote(string commentId, bool isUpvote) // 1. Fixed parameter name to match View
     {
         var currentUserId = _userManager.GetUserId(User);
-    
         Comment? comment = _db.Comments.Find(commentId);
 
         if (comment is null)
@@ -95,22 +94,24 @@ public class CommentsController : Controller
             return NotFound();
         }
 
+        // verificam daca exista deja un vot in t.a.
         var existingVote = _db.CommentsVotes
             .FirstOrDefault(v => v.CommentId == commentId && v.UserId == currentUserId);
 
-        if (existingVote != null)
+        if (existingVote != null) // cazul in care e deja in baza de date
         {
-            if (existingVote.IsUpvote == isUpvote)
+            
+            if (existingVote.IsUpvote == isUpvote) // verificam daca si a luat votul
             {
                 _db.CommentsVotes.Remove(existingVote);
             }
-            else
+            else // daca nu schimbam votul
             {
                 existingVote.IsUpvote = isUpvote;
                 _db.CommentsVotes.Update(existingVote);
             }
         }
-        else
+        else // cazul in care nu este votul in baza de date (il adaugam);
         {
             CommentVote vote = new CommentVote
             {

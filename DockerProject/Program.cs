@@ -8,21 +8,26 @@ var builder = WebApplication.CreateBuilder(args);
 
 Env.Load(); //pt siguranta
 
-// Add services to the container.
+// creaza connextion string ul
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ??
                        throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+
+// se conecteaza la baza de date
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 4))));
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
+// se adauga identity
 builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
+
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
+// se adauga rolurile de baza (din SeedData) la prima rulare daca nu sunt in baza de date
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;

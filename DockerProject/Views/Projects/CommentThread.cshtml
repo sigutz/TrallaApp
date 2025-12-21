@@ -20,8 +20,10 @@
 }
 <div class="ms-4 border-start ps-3 mt-3" id="comment-@Model.Id">
     <div class="d-flex gap-2 ">
-        @* UPVOTE FORM *@
+
         <div class="d-flex flex-column text-center">
+
+            @* UPVOTE FORM *@
             <form asp-controller="Comments" asp-action="Vote" method="post" class="">
                 <input type="hidden" name="commentId" value="@Model.Id"/>
                 <input type="hidden" name="isUpvote" value="true"/>
@@ -43,30 +45,41 @@
                     <i class="bi @iconVoteDown fs-5"></i>
                 </button>
             </form>
+
         </div>
+
+
         <div class="flex-grow-1">
+
+            @* DETALII CREARE *@
             <div class="d-flex justify-content-between align-items-center">
                 <span class="fw-bold small">@(Model.Author?.UserName ?? "Anonymous")</span>
                 <span class="text-muted extra-small">@Model.Date.ToString("g")</span>
             </div>
+
+            @* CONTINUT *@
             <p class="mb-1 text-dark">@Model.Content</p>
 
+            @* ACTIUNI *@
             <div class="d-flex justify-content-between">
-                <div>  @* Reply Trigger *@
-                    <div class="mb-2">
-                        <button class="btn btn-link btn-sm p-0 text-decoration-none text-muted"
-                                onclick="toggleChildren('@Model.Id')">
 
+                <div> @* REPLY *@
+                    <div class="mb-2">
+
+                        <button class="btn btn-link btn-sm p-0 text-decoration-none text-muted"
+                                onclick="toggleChildren('@Model.Id')"> @* SHOW/HIDE COMENTARII COPIL *@
                             <i id="icon-@Model.Id" class="bi bi-folder-minus fs-6"></i>
                         </button>
-                        <button class="btn btn-link btn-sm p-0 text-decoration-none text-muted"
-                                onclick="toggleReplyForm('@Model.Id')">
 
+                        <button class="btn btn-link btn-sm p-0 text-decoration-none text-muted"
+                                onclick="toggleReplyForm('@Model.Id')"> @* SHOW/HIDE REPLY *@
                             <i class="bi bi-reply"></i> Reply
                         </button>
+
                     </div>
                 </div>
-                <div>
+
+                <div> @* ADMINISTRARE *@
                     @if (canEdit)
                     {
                         <a asp-controller="Comments" asp-action="Edit" asp-route-id="@Model.Id"
@@ -85,7 +98,7 @@
                 </div>
             </div>
 
-            @* Hidden Reply Form *@
+            @* FORMULAR REPLY *@
             <div id="reply-form-@Model.Id" class="d-none mb-3">
                 <form asp-controller="Comments" asp-action="New" method="post">
                     <input type="hidden" name="ProjectParentId" value="@Model.ProjectParentId"/>
@@ -98,13 +111,14 @@
                 </form>
             </div>
 
-            @* comentarii copil *@
+            @* RECURSIVITATE COMENTARII COPIL*@
             <div id="children-@Model.Id" class="d-block mb-3">
                 @if (Model.ProjectParent?.Comments != null)
                 {
                     var replies = Model.ProjectParent.Comments
                         .Where(c => c.CommentParentId == Model.Id)
                         .OrderByDescending(c => c.Date);
+                    
                     foreach (var reply in replies)
                     {
                         <partial name="CommentThread" model="reply"/>
