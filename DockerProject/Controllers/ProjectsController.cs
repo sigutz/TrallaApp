@@ -17,43 +17,45 @@ public class ProjectsController(
     private readonly UserManager<ApplicationUser> _userManager = userManager;
     private readonly RoleManager<IdentityRole> _roleManager = roleManager;
 
+
+    [NonAction]
     private void SetAccesRights()
     {
-        ViewBag.ListaProiecteProprii = from p in _db.Projects
-            where p.FounderId == _userManager.GetUserId(User)
-            select p.Id;
-
         ViewBag.UserCurent = _userManager.GetUserId(User);
         ViewBag.EsteAdmin = User.IsInRole("Admin");
     }
 
-    [NonAction]
-    public ICollection<Field> GetAllFields() // trebuie regandita
-    {
-        var selectList = new List<Field>();
-
-        var fields = _db.Fields;
-
-        foreach (var field in fields)
-        {
-            selectList.Add(field);
-        }
-
-        return selectList;
-    }
-
     [Authorize]
-    public IActionResult Index()
+    public IActionResult Index(bool star = false, string? user = null, string? search = null)
     {
         SetAccesRights();
 
-        var projects = _db.Projects
+        IQueryable<Project> projects = _db.Projects
             .Include(p => p.Fields)
             .Include(p => p.Founder)
             .Include(p => p.StarredBy)
             .OrderByDescending(p => p.StarredBy.Count())
             .ThenBy(p => p.CreatedDate);
 
+        if (star)
+        {
+            var currentUserId = _userManager.GetUserId(User);
+            projects = projects.Where(p => p.StarredBy.Any(u => u.Id == currentUserId));
+        }
+
+        if (!string.IsNullOrEmpty(user))
+        {
+            projects = projects.Where(p => p.FounderId == user);
+        }
+
+        if (!string.IsNullOrEmpty(search))
+        {
+            projects = projects.Where(p => p.Title.Contains(search) || p.Description.Contains(search));
+        }
+
+        ViewBag.CurrentStar = star;
+        ViewBag.CurrentUser = user;
+        ViewBag.CurrentSearch = search;
         ViewBag.Projects = projects;
 
         if (TempData.ContainsKey("message"))
@@ -63,33 +65,6 @@ public class ProjectsController(
         }
 
         return View();
-    }
-
-    [Authorize]
-    public IActionResult Profile(string userid) // functia asta returneaza proiectele detinute de user, trebuie inbinata cu index
-    {
-        SetAccesRights();
-
-        if (_db.ApplicationUsers.Find(userid) is null)
-            return NotFound();
-
-        var projects = _db.Projects
-            .Include(p => p.Fields)
-            .Include(p => p.Founder)
-            .Include(p => p.StarredBy)
-            .OrderByDescending(p => p.StarredBy.Count())
-            .ThenBy(p => p.CreatedDate)
-            .Where(p => p.FounderId == userid);
-
-        ViewBag.Projects = projects;
-
-        if (TempData.ContainsKey("message"))
-        {
-            ViewBag.Message = TempData["message"];
-            ViewBag.Alert = TempData["messageType"];
-        }
-
-        return View("Index");
     }
 
     [Authorize]
@@ -118,12 +93,11 @@ public class ProjectsController(
     {
         Project project = new Project();
 
-        project.Fields = GetAllFields();
-
         return View(project);
     }
 
-    [Authorize] [HttpPost]
+    [Authorize]
+    [HttpPost]
     public IActionResult New(Project project)
     {
         project.FounderId = _userManager.GetUserId(User);
@@ -149,7 +123,8 @@ public class ProjectsController(
         return RedirectToAction("Index");
     }
 
-    [Authorize] [HttpPost]
+    [Authorize]
+    [HttpPost]
     public IActionResult Edit(string id, Project reqProject)
     {
         Project? project = _db.Projects.Find(id);
@@ -177,8 +152,9 @@ public class ProjectsController(
         return Forbid();
     }
 
-    
-    [Authorize] [HttpPost]
+
+    [Authorize]
+    [HttpPost]
     public ActionResult Delete(string projectid)
     {
         Project? project = _db.Projects.Find(projectid);
@@ -199,7 +175,7 @@ public class ProjectsController(
     {
         var userId = _userManager.GetUserId(User);
         var user = _db.ApplicationUsers.Find(userId);
-        var project = _db.Projects.Include(p => p.StarredBy).FirstOrDefault(p=> p.Id == projectid);
+        var project = _db.Projects.Include(p => p.StarredBy).FirstOrDefault(p => p.Id == projectid);
 
         if (project is null)
             return NotFound();
@@ -217,7 +193,7 @@ public class ProjectsController(
         _db.SaveChanges();
 
         var nr_likes = project.StarredBy.Count();
-        
+
         return Json(new { success = true, stars = nr_likes, follow = follow });
     }
 }
