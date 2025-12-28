@@ -15,6 +15,9 @@ public class HomeController : Controller
 
     public IActionResult Index()
     {
+        // if (User.Identity is { IsAuthenticated: true })
+        //     return RedirectToAction("Index", "Projects");
+        // merge dar pana cred ca e cel mai ok pana la deployment ul final sa o lasam comentata ca sa putem sa testam
         return View();
     }
 

@@ -3,7 +3,10 @@ public enum ProjectMemberStatus
 {
     Pending,
     Banned,
-    Accepted
+    Accepted,
+    Rejected,
+    Kicked,
+    Invited
 }
 public class ProjectMember
 {
@@ -14,4 +17,6 @@ public class ProjectMember
     public virtual ApplicationUser Member { get; set; } = null!;
 
     public ProjectMemberStatus Status { get; set; } = ProjectMemberStatus.Pending;
+
+    public DateTime LastModification { get; set; } = DateTime.Now;
 }

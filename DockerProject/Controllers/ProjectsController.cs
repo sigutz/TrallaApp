@@ -260,19 +260,41 @@ public class ProjectsController(
     {
         if (string.IsNullOrEmpty(projectId) || string.IsNullOrEmpty(memberId))
             return BadRequest("Missing parameters");
-        
+
         ProjectMember? projectMember =
             _db.ProjectMembers.FirstOrDefault(pm => pm.ProjectId == projectId && pm.MemberId == memberId);
 
         if (projectMember is null)
             return NotFound();
 
-        if (accepted )
+        if (accepted)
             projectMember.Status = ProjectMemberStatus.Accepted;
         else _db.ProjectMembers.Remove(projectMember);
 
+        int nrAnyPendReqLeft =
+            _db.ProjectMembers.Count(pm => pm.ProjectId == projectId && pm.Status == ProjectMemberStatus.Pending);
+
         _db.SaveChanges();
 
-        return Json(new { success = true, accepted });
+        return Json(new { success = true, accepted, nrAnyPendReqLeft });
+    }
+
+    [HttpPost]
+    [Authorize]
+    public IActionResult KickUserFromProject([FromForm] string projectId, [FromForm] string memberId)
+    {
+        if (string.IsNullOrEmpty(projectId) || string.IsNullOrEmpty(memberId))
+            return BadRequest("Missing parameters");
+
+        ProjectMember? projectMember =
+            _db.ProjectMembers.FirstOrDefault(pm => pm.ProjectId == projectId && pm.MemberId == memberId);
+
+        if (projectMember is null)
+            return NotFound();
+
+        _db.ProjectMembers.Remove(projectMember);
+        _db.SaveChanges();
+
+        return Json(new { success = true });
     }
 }

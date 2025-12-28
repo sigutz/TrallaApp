@@ -111,7 +111,7 @@
 
                 <div class="card-footer bg-light">
                     <div class="d-flex justify-content-between">
-                        <div class="">
+                        <div class="m-1">
                             <a asp-action="Index" class="btn btn-secondary btn-sm">
                                 <i class="bi bi-arrow-left"></i> Back to List
                             </a>
@@ -121,17 +121,34 @@
                             @if (!isOwner && !isBanned)
                             {
                                 string textJoin = isMember ? "Leave" : isPending ? "Cancel" : "Ask to join";
-                                <button class="btn btn-outline-secondary btn-sm" onclick="ActionsOnJoin('@Model.Id')">
+                                <button class="btn btn-outline-secondary btn-sm" onclick="ActionsOnJoin('@Model.Id')" >
                                     <div id="join-btn">@textJoin</div>
                                 </button>
                             }
-                            else if (isOwner && @Model.Members.Any(mq => mq.Status == ProjectMemberStatus.Pending))
+                            else if (isOwner)
                             {
-                                var pendingRequestCount = Model.Members.Count(pm => pm.Status == ProjectMemberStatus.Pending);
+                                <div class="d-inline-flex">
+                                    @if (@Model.Members.Any(mq => mq.Status == ProjectMemberStatus.Pending))
+                                    {
+                                        var pendingRequestCount = Model.Members.Count(pm => pm.Status ==
+                                                                                            ProjectMemberStatus.Pending);
 
-                                <button class="btn btn-outline-secondary btn-sm" onclick="toggle('pendingRequests')">
-                                    @pendingRequestCount Pending @(pendingRequestCount == 1 ? "request" : "requests")
-                                </button>
+                                        <button class="btn btn-outline-secondary btn-sm"
+                                                onclick="toggle('pendingRequests')"
+                                                id="btn-show-pend-req">
+                                            @pendingRequestCount Pending @(pendingRequestCount == 1 ? "request" : "requests")
+                                        </button>
+                                    }
+
+                                    <div class="">
+                                        <a class="btn btn-sm "><i class="bi bi-person-fill-add fs-5"></i></a>
+                                    </div>
+                                    <div class="m-1">
+                                        <a class="btn btn-secondary btn-sm "
+                                           onclick="toggle('manageMembers')">Members</a>
+                                    </div>
+
+                                </div>
                             }
 
                         </div>
@@ -141,22 +158,22 @@
                 <div class="d-none " id="to-toggle-pendingRequests">
                     @foreach (var pendingRequest in Model.Members.Where(pm => pm.Status == ProjectMemberStatus.Pending))
                     {
-                        <div class="m-4 d-flex justify-content-between align-items-center"
+                        <div class="m-4 d-flex justify-content-evenly align-items-center "
                              id="pending-request-@pendingRequest.ProjectId-@pendingRequest.MemberId">
                             <div>
                                 @pendingRequest.Member.Email
                             </div>
-                            <div class="d-inline-flex">
+                            <div class="d-inline-flex g-4">
                                 <div class="">
-                                    <button class="btn btn-secondary"
-                                       onclick="RespondJoinRequest('@pendingRequest.ProjectId','@pendingRequest.MemberId', true)">
+                                    <button class="btn btn-secondary btn-sm "
+                                            onclick="RespondJoinRequest('@pendingRequest.ProjectId','@pendingRequest.MemberId', true)">
                                         <i class="bi bi-check-lg "></i>
                                     </button>
                                 </div>
                                 <br>
                                 <div class="">
-                                    <button class="btn btn-secondary"
-                                       onclick="RespondJoinRequest('@pendingRequest.ProjectId','@pendingRequest.MemberId', false)">
+                                    <button class="btn btn-secondary btn-sm "
+                                            onclick="RespondJoinRequest('@pendingRequest.ProjectId','@pendingRequest.MemberId', false)">
                                         <i class="bi bi-x "></i>
                                     </button>
                                 </div>
@@ -164,7 +181,30 @@
                         </div>
                     }
                 </div>
+
+                <div class="d-none m-4" id="to-toggle-manageMembers">
+                    <h5>Members</h5>
+                    @foreach (var member in Model.Members.Where(pm => pm.Status == ProjectMemberStatus.Accepted))
+                    {
+                        <div class="d-flex justify-content-evenly align-items-center "
+                             id="kick-@member.ProjectId-@member.MemberId">
+                            <div>
+                                @member.Member.Email
+                            </div>
+                            <div class="d-inline-flex m-1">
+                                <div class="m-1">
+                                    <a class="btn btn-secondary btn-sm">asign</a>
+                                </div>
+                                <div class="m-1">
+                                    <a class="btn btn-danger btn-sm"
+                                       onclick="KickUserFromProject('@member.ProjectId', '@member.MemberId')">kick</a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
             </div>
+
 
             <div class="card shadow-sm">
                 <div class="card-header bg-light">

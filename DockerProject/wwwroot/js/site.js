@@ -1,4 +1,4 @@
-﻿// Toggles the visibility of the reply form
+﻿// Toggles the visibility of a div
 function toggle(id) {
     const form = document.getElementById(`to-toggle-${id}`);
     if (form) {
@@ -101,7 +101,7 @@ function starProject(projectid) {
     }).catch(error => console.error("Error:", error));
 }
 
-function ActionsOnJoin(projectid){
+function ActionsOnJoin(projectid) {
     let formData = new FormData();
     formData.append('projectid', projectid);
     console.log('Am intrat in fn');
@@ -109,26 +109,26 @@ function ActionsOnJoin(projectid){
         '/Projects/ActionsMemberJoinProject/',
         {
             method: 'POST',
-            body : formData
+            body: formData
         }
-    ).then (response => {
-        if(response.ok)
+    ).then(response => {
+        if (response.ok)
             return response.json();
         throw Error(response.statusText);
     }).then(data => {
-        if(data.success){
+        if (data.success) {
             const btnJoin = document.getElementById('join-btn');
-            
-            if(data.isActionAsk){
-                btnJoin.innerText='Cancel';
+
+            if (data.isActionAsk) {
+                btnJoin.innerText = 'Cancel';
             } else {
-                btnJoin.innerText='Ask to join';
+                btnJoin.innerText = 'Ask to join';
             }
         }
     }).catch(error => console.error("Error:", error));
 }
 
-function RespondJoinRequest(projectId, memberId, accepted){
+function RespondJoinRequest(projectId, memberId, accepted) {
     let formData = new FormData();
     formData.append('projectId', projectId);
     formData.append('memberId', memberId);
@@ -141,13 +141,43 @@ function RespondJoinRequest(projectId, memberId, accepted){
             body: formData
         }
     ).then(response => {
+        if (response.ok)
+            return response.json();
+        throw Error(response.statusText);
+    }).then(data => {
+        if (data.success) {
+            const pendingRequest = document.getElementById('pending-request-' + projectId + '-' + memberId);
+            pendingRequest.classList.replace('d-flex', 'd-none');
+
+            if (data.nrAnyPendReqLeft === 0) {
+                const btnShowPendReq = document.getElementById('btn-show-pend-req');
+                btnShowPendReq.classList.add('d-none');
+            } else if (data.nrAnyPendReqLeft === 1) {
+                const btnShowPendReq = document.getElementById('btn-show-pend-req');
+                btnShowPendReq.innerText = 'request';
+            }
+        }
+    }).catch(error => console.error('Eroare:', error));
+}
+
+function KickUserFromProject(projectId, memberId){
+    let formData= new FormData();
+    formData.append("projectId", projectId);
+    formData.append("memberId", memberId);
+    fetch(
+        "/Projects/KickUserFromProject/",
+        {
+            method: 'POST',
+            body: formData
+        }
+    ).then(response => {
         if(response.ok)
             return response.json();
         throw Error(response.statusText);
     }).then(data => {
         if(data.success){
-            const pendingRequest = document.getElementById('pending-request-'+ projectId+ '-' + memberId);
-            pendingRequest.classList.replace('d-flex', 'd-none');
+            const kickDiv = document.getElementById('kick-'+projectId+'-'+memberId);
+            kickDiv.classList.replace('d-flex', 'd-none');
         }
     }).catch(error => console.error('Eroare:', error));
 }
