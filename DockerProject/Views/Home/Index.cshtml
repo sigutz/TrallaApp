@@ -1,9 +1,76 @@
 ﻿@{
     ViewData["Title"] = "Home Page";
+    Layout = null;
 }
 
-<div class="text-center">
-    <h1 class="display-4">Buna</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+    ::-webkit-scrollbar {
+        width: 10px; 
+        height: 10px; 
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: black;
+    }
+
+    ::-webkit-scrollbar-thumb { 
+        background: #888;
+        /* border-radius: 5px; */
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+
+    ::-webkit-scrollbar-button {
+        display: none;
+    }
+    
+    .snap-container {
+        height: 100vh;
+        overflow-y: auto;
+        scroll-snap-type: y mandatory;
+        scroll-behavior: smooth;
+    }
+
+    .snap-section {
+        height: 100vh;
+        scroll-snap-align: start;
+    }
+    
+    .zona1{
+        background: linear-gradient(135deg,#81d8e5 , #8461f4);
+    }
+</style>
+
+<body>
+
+<div class="snap-container">
+    <h1 class="position-absolute top-0 start-0 m-4">Tralla</h1>
+
+    <div class="snap-section d-flex align-items-center justify-content-center text-white zona1">
+        <div class="text-center">
+            <a class="btn " asp-controller="Projects" asp-action="Index"><h1>JOIN NOW</h1></a>
+        </div>
+    </div>
+
+    <div class="snap-section bg-success d-flex align-items-center justify-content-center text-white ">
+
+        <div class="text-center">
+            <p>I am the second full-screen slide.</p>
+        </div>
+    </div>
+
+    <div class="snap-section bg-danger d-flex align-items-center justify-content-center text-white">
+        <div class="text-center">
+            <h1>Zone 3</h1>
+            <p>I am the final destination.</p>
+        </div>
+    </div>
+
 </div>
+
+</body>
 
