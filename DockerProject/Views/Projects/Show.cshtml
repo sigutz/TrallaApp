@@ -10,10 +10,13 @@
 
     ViewData["ProjectFounderId"] = Model.FounderId;
 
-    var currentUserId = UserManager.GetUserId(User);
-    var isAdmin = User.IsInRole("Admin");
-    var isOwner = currentUserId == Model.FounderId;
-    var canEdit = isAdmin || isOwner;
+    string currentUserId = UserManager.GetUserId(User);
+    bool isAdmin = User.IsInRole("Admin");
+    bool isOwner = currentUserId == Model.FounderId;
+    bool isMember = ViewBag.isMember;
+    bool isBanned = ViewBag.isBanned;
+    bool isPending = ViewBag.isPending;
+    bool canEdit = isAdmin || isOwner;
 
     var userStarProject = Model.StarredBy.FirstOrDefault(s => s.Id == currentUserId);
     var starIcon = userStarProject != null ? "bi-star-fill" : "bi-star";
@@ -107,9 +110,59 @@
                 </div>
 
                 <div class="card-footer bg-light">
-                    <a asp-action="Index" class="btn btn-secondary btn-sm">
-                        <i class="bi bi-arrow-left"></i> Back to List
-                    </a>
+                    <div class="d-flex justify-content-between">
+                        <div class="">
+                            <a asp-action="Index" class="btn btn-secondary btn-sm">
+                                <i class="bi bi-arrow-left"></i> Back to List
+                            </a>
+                        </div>
+                        <div class="d-inline">
+
+                            @if (!isOwner && !isBanned)
+                            {
+                                string textJoin = isMember ? "Leave" : isPending ? "Cancel" : "Ask to join";
+                                <button class="btn btn-outline-secondary btn-sm" onclick="ActionsOnJoin('@Model.Id')">
+                                    <div id="join-btn">@textJoin</div>
+                                </button>
+                            }
+                            else if (isOwner && @Model.Members.Any(mq => mq.Status == ProjectMemberStatus.Pending))
+                            {
+                                var pendingRequestCount = Model.Members.Count(pm => pm.Status == ProjectMemberStatus.Pending);
+
+                                <button class="btn btn-outline-secondary btn-sm" onclick="toggle('pendingRequests')">
+                                    @pendingRequestCount Pending @(pendingRequestCount == 1 ? "request" : "requests")
+                                </button>
+                            }
+
+                        </div>
+
+                    </div>
+                </div>
+                <div class="d-none " id="to-toggle-pendingRequests">
+                    @foreach (var pendingRequest in Model.Members.Where(pm => pm.Status == ProjectMemberStatus.Pending))
+                    {
+                        <div class="m-4 d-flex justify-content-between align-items-center"
+                             id="pending-request-@pendingRequest.ProjectId-@pendingRequest.MemberId">
+                            <div>
+                                @pendingRequest.Member.Email
+                            </div>
+                            <div class="d-inline-flex">
+                                <div class="">
+                                    <button class="btn btn-secondary"
+                                       onclick="RespondJoinRequest('@pendingRequest.ProjectId','@pendingRequest.MemberId', true)">
+                                        <i class="bi bi-check-lg "></i>
+                                    </button>
+                                </div>
+                                <br>
+                                <div class="">
+                                    <button class="btn btn-secondary"
+                                       onclick="RespondJoinRequest('@pendingRequest.ProjectId','@pendingRequest.MemberId', false)">
+                                        <i class="bi bi-x "></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
                 </div>
             </div>
 

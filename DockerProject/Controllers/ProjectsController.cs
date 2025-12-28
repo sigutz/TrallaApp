@@ -79,7 +79,22 @@ public class ProjectsController(
             .ThenInclude(c => c.Author)
             .Include(p => p.Comments)
             .ThenInclude(c => c.Votes)
+            .Include(p => p.Members)
+            .ThenInclude(m => m.Member)
             .FirstOrDefault(p => p.Id == id);
+        if (project is null)
+            return NotFound();
+
+        string currentUserId = _userManager.GetUserId(User);
+        var currentUser = _db.ApplicationUsers.Find(currentUserId);
+
+        ViewBag.currentUser = currentUser;
+        ViewBag.isMember =
+            project.Members.Any(pm => pm.MemberId == currentUserId && pm.Status == ProjectMemberStatus.Accepted);
+        ViewBag.isBanned =
+            project.Members.Any(pm => pm.MemberId == currentUserId && pm.Status == ProjectMemberStatus.Banned);
+        ViewBag.isPending =
+            project.Members.Any(pm => pm.MemberId == currentUserId && pm.Status == ProjectMemberStatus.Pending);
 
         if (project is null)
             return NotFound();
@@ -194,6 +209,70 @@ public class ProjectsController(
 
         var nr_likes = project.StarredBy.Count();
 
-        return Json(new { success = true, stars = nr_likes, follow = follow });
+        return Json(new { success = true, stars = nr_likes, follow });
+    }
+
+    [HttpPost]
+    [Authorize]
+    public IActionResult ActionsMemberJoinProject(string projectid)
+    {
+        string userId = _userManager.GetUserId(User);
+        var user = _db.ApplicationUsers.Find(userId);
+        Project? project = _db.Projects.Include(p => p.Members).FirstOrDefault(p => p.Id == projectid);
+        bool isActionAsk = true;
+
+        if (project is null)
+            return NotFound();
+
+        ProjectMember? projectMember = project.Members.Where(m => m.MemberId == userId).FirstOrDefault();
+
+        if (projectMember is not null) // cancel sau leave
+        {
+            if (projectMember.Status == ProjectMemberStatus.Banned)
+                return Forbid();
+            project.Members.Remove(projectMember);
+            isActionAsk = false;
+        }
+        else //daca nu e banat depune cerearea
+        {
+            projectMember = new ProjectMember
+            {
+                MemberId = userId,
+                Member = user,
+                ProjectId = projectid,
+                Project = project,
+                Status = ProjectMemberStatus.Pending
+            };
+
+            project.Members.Add(projectMember);
+            isActionAsk = true;
+        }
+
+        _db.SaveChanges();
+
+        return Json(new { success = true, isActionAsk });
+    }
+
+    [HttpPost]
+    [Authorize]
+    public IActionResult RespondJoinRequest([FromForm] string projectId, [FromForm] string memberId,
+        [FromForm] bool accepted)
+    {
+        if (string.IsNullOrEmpty(projectId) || string.IsNullOrEmpty(memberId))
+            return BadRequest("Missing parameters");
+        
+        ProjectMember? projectMember =
+            _db.ProjectMembers.FirstOrDefault(pm => pm.ProjectId == projectId && pm.MemberId == memberId);
+
+        if (projectMember is null)
+            return NotFound();
+
+        if (accepted )
+            projectMember.Status = ProjectMemberStatus.Accepted;
+        else _db.ProjectMembers.Remove(projectMember);
+
+        _db.SaveChanges();
+
+        return Json(new { success = true, accepted });
     }
 }
