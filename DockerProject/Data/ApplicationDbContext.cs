@@ -19,8 +19,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Field> Fields { get; set; }
     public DbSet<Comment> Comments { get; set; }
     public DbSet<CommentVote> CommentsVotes { get; set; }
-    
-    
+    public DbSet<ProjectMember> ProjectMembers { get; set; }
+
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -30,11 +30,9 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         builder.Entity<CommentVote>()
             .HasKey(cv => new { cv.UserId, cv.CommentId });
 
-        //tabelul asociativ intre useri si din ce proiecte fac parte
-        builder.Entity<Project>()
-            .HasMany(p => p.Members)
-            .WithMany(u => u.MemberOf)
-            .UsingEntity(j => j.ToTable("ProjectMembers"));
+        // tabelul asociativ intre useri si din ce proiecte fac parte (ProjectMembers)
+        builder.Entity<ProjectMember>()
+            .HasKey(pm => new { pm.ProjectId, pm.MemberId});
 
         // tabelul asociativ care contorizeaza proiectele puse de user la stared
         builder.Entity<Project>()
@@ -49,7 +47,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .HasForeignKey(p => p.FounderId)
             .OnDelete(DeleteBehavior.Restrict); // nu se sterge userul daca se sterge un proiect
 
-        
+
         builder.Entity<Comment>()
             .HasOne(c => c.ProjectParent)
             .WithMany(p => p.Comments)
@@ -57,9 +55,9 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .OnDelete(DeleteBehavior.Cascade); //nu se sterge proiectul daca se sterge un comentariu din el
 
         builder.Entity<ProjectTask>()
-            .HasOne(t => t.ProjectParent)        
+            .HasOne(t => t.ProjectParent)
             .WithMany(p => p.Tasks)
-            .HasForeignKey(t => t.ProjectParentId) 
+            .HasForeignKey(t => t.ProjectParentId)
             .OnDelete(DeleteBehavior.Cascade); //nu se sterge proiectul daca se sterge un task din el
 
         builder.Entity<Comment>()

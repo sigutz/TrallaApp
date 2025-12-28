@@ -1,6 +1,6 @@
 ﻿// Toggles the visibility of the reply form
-function toggleReplyForm(id) {
-    const form = document.getElementById(`reply-form-${id}`);
+function toggle(id) {
+    const form = document.getElementById(`to-toggle-${id}`);
     if (form) {
         form.classList.toggle('d-none');
     }
@@ -99,4 +99,55 @@ function starProject(projectid) {
             }
         }
     }).catch(error => console.error("Error:", error));
+}
+
+function ActionsOnJoin(projectid){
+    let formData = new FormData();
+    formData.append('projectid', projectid);
+    console.log('Am intrat in fn');
+    fetch(
+        '/Projects/ActionsMemberJoinProject/',
+        {
+            method: 'POST',
+            body : formData
+        }
+    ).then (response => {
+        if(response.ok)
+            return response.json();
+        throw Error(response.statusText);
+    }).then(data => {
+        if(data.success){
+            const btnJoin = document.getElementById('join-btn');
+            
+            if(data.isActionAsk){
+                btnJoin.innerText='Cancel';
+            } else {
+                btnJoin.innerText='Ask to join';
+            }
+        }
+    }).catch(error => console.error("Error:", error));
+}
+
+function RespondJoinRequest(projectId, memberId, accepted){
+    let formData = new FormData();
+    formData.append('projectId', projectId);
+    formData.append('memberId', memberId);
+    formData.append('accepted', accepted);
+    console.log(projectId + ' - ' + memberId + ' ' + accepted);
+    fetch(
+        '/Projects/RespondJoinRequest/',
+        {
+            method: 'POST',
+            body: formData
+        }
+    ).then(response => {
+        if(response.ok)
+            return response.json();
+        throw Error(response.statusText);
+    }).then(data => {
+        if(data.success){
+            const pendingRequest = document.getElementById('pending-request-'+ projectId+ '-' + memberId);
+            pendingRequest.classList.replace('d-flex', 'd-none');
+        }
+    }).catch(error => console.error('Eroare:', error));
 }

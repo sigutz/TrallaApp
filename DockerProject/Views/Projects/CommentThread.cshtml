@@ -68,7 +68,7 @@
                         </button>
 
                         <button class="btn btn-link btn-sm p-0 text-decoration-none text-muted"
-                                onclick="toggleReplyForm('@Model.Id')"> @* SHOW/HIDE REPLY *@
+                                onclick="toggle('@Model.Id')"> @* SHOW/HIDE REPLY *@
                             <i class="bi bi-reply"></i> Reply
                         </button>
 
@@ -95,14 +95,14 @@
             </div>
 
             @* FORMULAR REPLY *@
-            <div id="reply-form-@Model.Id" class="d-none mb-3">
+            <div id="to-toggle-@Model.Id" class="d-none mb-3">
                 <form asp-controller="Comments" asp-action="New" method="post">
                     <input type="hidden" name="ProjectParentId" value="@Model.ProjectParentId"/>
                     <input type="hidden" name="CommentParentId" value="@Model.Id"/>
                     <textarea name="Content" class="form-control form-control-sm mb-2" rows="2"
                               placeholder="Write a reply..."></textarea>
                     <button type="submit" class="btn btn-primary btn-sm">Submit</button>
-                    <button type="button" class="btn btn-light btn-sm" onclick="toggleReplyForm('@Model.Id')">Cancel
+                    <button type="button" class="btn btn-light btn-sm" onclick="toggle('@Model.Id')">Cancel
                     </button>
                 </form>
             </div>

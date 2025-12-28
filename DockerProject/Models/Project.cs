@@ -16,7 +16,7 @@ public class Project
     public string FounderId { get; set; }
     public virtual ApplicationUser Founder { get; set; }
     
-    public virtual ICollection<ApplicationUser> Members { get; set; } = new List<ApplicationUser>();
+    public virtual ICollection<ProjectMember> Members { get; set; } = new List<ProjectMember>();
 
     public virtual ICollection<ApplicationUser> StarredBy { get; set; } = new List<ApplicationUser>();
 

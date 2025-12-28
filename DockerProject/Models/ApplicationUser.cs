@@ -56,13 +56,14 @@ public class ApplicationUser : IdentityUser
     public string? ProfilePictureUrl { get; set; } 
     public virtual ICollection<UserFriend> Friends { get; set; } = new List<UserFriend>();
     
-    public virtual ICollection<Project> MemberOf { get; set; } = new List<Project>();
+    public virtual ICollection<ProjectMember> MemberOf { get; set; } = new List<ProjectMember>();
     
     public virtual ICollection<Project> Starred { get; set; } = new List<Project>();
     
     public virtual ICollection<ProjectTask> Tasks { get; set; } = new List<ProjectTask>();
     
     public virtual ICollection<CommentVote> Votes { get; set; } = new List<CommentVote>();
+    
 }
 
 public class UserFriend
