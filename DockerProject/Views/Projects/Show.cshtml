@@ -28,20 +28,39 @@
 
             <div class="card shadow-sm mb-4">
 
-                @* facem ca numele proiectului sa fie in stanga si restul detaliilor din header in dreapta *@
                 <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
 
-                    <h2 class="m-0">@Model.Title</h2>
+                    <div class="d-flex flex-column justify-content-center">
 
+                        <div class="d-flex align-items-center gap-2">
+                            <button title="Add to favorites" onclick="starProject('@Model.Id')"
+                                    class="badge bg-warning text-dark d-flex align-items-center gap-1 fs-6 border-0">
+                                <i id="star-icon-@Model.Id" class="bi @starIcon fs-5"></i>
+                                <div id="star-count-@Model.Id" class="text-muted text-center">
+                                    @Model.StarredBy.Count()
+                                </div>
+                            </button>
+
+                            <h2 class="m-0">@Model.Title</h2>
+                        </div>
+
+                        <div class="d-flex flex-wrap gap-2 mt-2 small">
+                            @if (Model.Fields != null && Model.Fields.Any())
+                            {
+                                foreach (var field in Model.Fields)
+                                {
+                                    <span class="badge js-contrast"
+                                          data-hex="@field.HexColor"
+                                          style="background-color: @field.HexColor;">
+                        @field.Title
+                    </span>
+                                }
+                            }
+                        </div>
+                    </div>
+
+                    @* --- RIGHT SIDE: Buttons or Info --- *@
                     <div class="d-flex align-items-center gap-2">
-
-                        <button title="Add to favorites" onclick="starProject('@Model.Id')"
-                                class="badge bg-warning text-dark d-flex align-items-center gap-1 fs-6 border-0">
-                            <i id="star-icon-@Model.Id" class="bi @starIcon fs-5"></i>
-                            <div id="star-count-@Model.Id" class="text-muted text-center">
-                                @Model.StarredBy.Count()
-                            </div>
-                        </button>
 
                         @if (canEdit)
                         {
@@ -58,18 +77,23 @@
                                 </button>
                             </form>
                         }
+                        else
+                        {
+                            <div class="text-end">
+                                <div>
+                                    <i class="bi bi-calendar"></i> Created: @Model.CreatedDate.ToString("MMM dd, yyyy")
+                                </div>
+                                <div>
+                                    <i class="bi bi-person"></i> Founded by:
+                                    <strong>@(Model.Founder?.UserName ?? "Unknown")</strong>
+                                </div>
+                            </div>
+                        }
 
                     </div>
                 </div>
 
                 <div class="card-body">
-                    <div class="text-muted mb-4 small">
-                        <span>
-                            <i class="bi bi-person"></i> Founded by: <strong>@(Model.Founder?.UserName ?? "Unknown")</strong>
-                        </span>
-                        <span class="mx-2">|</span>
-                        <span><i class="bi bi-calendar"></i> Created: @Model.CreatedDate.ToString("MMM dd, yyyy")</span>
-                    </div>
 
                     <div class="mb-4">
                         <h5 class="text-secondary border-bottom pb-2">Description</h5>
@@ -77,19 +101,6 @@
                             @Html.Raw(Model.Description)
                         </div>
                     </div>
-
-                    @if (Model.Fields != null && Model.Fields.Any())
-                    {
-                        <div class="mb-4">
-                            <h5 class="text-secondary border-bottom pb-2">Fields</h5>
-                            <div class="d-flex flex-wrap gap-2 mt-2">
-                                @foreach (var field in Model.Fields)
-                                {
-                                    <span class="badge bg-info text-dark">@field.Title</span>
-                                }
-                            </div>
-                        </div>
-                    }
 
                     <div class="mb-4">
                         <h5 class="text-secondary border-bottom pb-2 d-flex justify-content-between">Tasks</h5>
@@ -121,7 +132,7 @@
                             @if (!isOwner && !isBanned)
                             {
                                 string textJoin = isMember ? "Leave" : isPending ? "Cancel" : "Ask to join";
-                                <button class="btn btn-outline-secondary btn-sm" onclick="ActionsOnJoin('@Model.Id')" >
+                                <button class="btn btn-outline-secondary btn-sm" onclick="ActionsOnJoin('@Model.Id')">
                                     <div id="join-btn">@textJoin</div>
                                 </button>
                             }
@@ -215,7 +226,7 @@
                     @{
                         /*  afisare comenatarii stil reddit
                          *  e un dfs cu urmataorea structura
-                         * 
+                         *
                          *  View Show(_Proiect)
                          *      Pentru fiecare _Comentariu din _Proiect fara Comentariu Parinte:
                          *          CommentThread(_Comentariu) // e un partial view
@@ -237,7 +248,7 @@
                         @foreach (var comment in topLevelComments)
                         {
                             // Il trimitem in partial pentru afisarea sa si afisaarea recursiva a copiilor
-                            <partial name="CommentThread" model="comment"/>
+                            <partial name="~/Views/Comments/_CommentThread.cshtml" model="comment"/>
                         }
                     }
                     else
@@ -271,3 +282,22 @@
         </div>
     </div>
 </div>
+
+<script>
+    // Wait for the HTML to be ready
+    document.addEventListener("DOMContentLoaded", function () {
+
+        document.querySelectorAll('.js-contrast').forEach(element => {
+            const hex = element.getAttribute('data-hex');
+            if (hex && typeof getContrastColor === 'function') {
+                const contrast = getContrastColor(hex);
+                
+                element.style.color = contrast;
+                element.style.border = '1.8px solid ' + contrast;
+            } else {
+                console.error("Function not found or hex missing!");
+            }
+        });
+
+    });
+</script>
