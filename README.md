@@ -212,13 +212,13 @@ docker compose run --rm sdk dotnet ef database update
 ## Checklist cerinte:
 
 ### 1. Autentificare si roluri (cerinta 1):
-- [ ] Implementare ASP.NET Identity (Login, Register, Logout)
-- [ ] Configurare roluri:
-    - [ ] **Administrator** (rol eplicit in BD)
-    - [ ] **Membru** (utilizator standard inregistrat)
-    - [ ] **Organizator** (creatorul unui proiect)
-    - [ ] **Vizitator** (utilizator neinregistrat)
-- [ ] Restrictionarea accesului pe baza rolului
+- [x] Implementare ASP.NET Identity (Login, Register, Logout)
+- [x] Configurare roluri:
+    - [x] **Administrator** (rol eplicit in BD)
+    - [x] **Membru** (utilizator standard inregistrat)
+    - [x] **Organizator** (creatorul unui proiect)
+    - [x] **Vizitator** (utilizator neinregistrat)
+- [x] Restrictionarea accesului pe baza rolului
 
 ### 2. Pagina de prezentare - Landing Page (cerinta 2):
 - [ ] Design atractiv pentru vizitatorii neinregistrati
@@ -230,19 +230,19 @@ docker compose run --rm sdk dotnet ef database update
 - **Nota** NU trebuie sa fie doar o pagina simpla de Login!!!
 
 ### 3. Gestionarea Proiectelor (cerinta 3 & 4):
-- [ ] Crearea entitatii Proiect:
-    - [ ] Id
-    - [ ] Titlu
-    - [ ] Descriere
-    - [ ] Data Crearii
-    - [ ] Id Organizator
-- [ ] CRUD Proiecte (accesibil doar pentru membrii):
-- [ ] Logica de back-end (ex: cel care creeaza proiectul devine Organizator)
-- [ ] Pagina dedicata pentru fiecare proiect
+- [x] Crearea entitatii Proiect:
+    - [x] Id
+    - [x] Titlu
+    - [x] Descriere
+    - [x] Data Crearii
+    - [x] Id Organizator
+- [x] CRUD Proiecte (accesibil doar pentru membrii):
+- [x] Logica de back-end (ex: cel care creeaza proiectul devine Organizator)
+- [x] Pagina dedicata pentru fiecare proiect
 - [ ] **Gestionarea echipei**:
     - [ ] Posibilitatea de a invita membrii (prin username/email)
-    - [ ] Posibilitatea de a elimina membrii 
-    - [ ] Vizualizarea listei de membri
+    - [x] Posibilitatea de a elimina membrii 
+    - [x] Vizualizarea listei de membri
 
 ### 4. Gestionarea Task-urilor (cerinta 5 & 6):
 - [ ] Crearea entitatii Task (Titlu, Descriere, Status, Data Inceperii, Data Finalizare, Media Contents)
@@ -257,15 +257,15 @@ docker compose run --rm sdk dotnet ef database update
     - [ ] Membrii pot vizualiza task-urile si le pot actualiza statusul
 
 ### 5. Sistem de comentarii (cerinta 7):
-- [ ] Implementare entitate Comment
-    - [ ] Continut
-    - [ ] Data
-    - [ ] Id 
-    - [ ] Id Utilizator
-- [ ] Afisarea comentariilor in pagina task-ului (cronologic)
+- [x] Implementare entitate Comment
+    - [x] Continut
+    - [x] Data
+    - [x] Id 
+    - [x] Id Utilizator
+- [x] Afisarea comentariilor in pagina task-ului (cronologic)
 - [ ] CRUD comentarii:
     - [ ] Adaugare comentariu (validare: nu poate fi gol)
-    - [ ] Editare/Steregerea propriului comenatariu
+    - [x] Editare/Steregerea propriului comenatariu
 
 ### 7. Dashboard personalizat (cerinta 8):
 - [ ] Creare Contoller/View pt dashboard
