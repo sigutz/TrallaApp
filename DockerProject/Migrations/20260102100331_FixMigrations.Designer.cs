@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DockerProject.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251220171441_AddVoteTable")]
-    partial class AddVoteTable
+    [Migration("20260102100331_FixMigrations")]
+    partial class FixMigrations
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -26,23 +26,6 @@ namespace DockerProject.Migrations
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
             modelBuilder.Entity("ApplicationUserProject", b =>
-                {
-                    b.Property<string>("MemberOfId")
-                        .HasMaxLength(255)
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<string>("MembersId")
-                        .HasMaxLength(255)
-                        .HasColumnType("varchar(255)");
-
-                    b.HasKey("MemberOfId", "MembersId");
-
-                    b.HasIndex("MembersId");
-
-                    b.ToTable("ProjectMembers", (string)null);
-                });
-
-            modelBuilder.Entity("ApplicationUserProject1", b =>
                 {
                     b.Property<string>("StarredById")
                         .HasMaxLength(255)
@@ -270,6 +253,29 @@ namespace DockerProject.Migrations
                     b.HasIndex("FounderId");
 
                     b.ToTable("Projects");
+                });
+
+            modelBuilder.Entity("DockerProject.Models.ProjectMember", b =>
+                {
+                    b.Property<string>("ProjectId")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("MemberId")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<DateTime>("LastModification")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.HasKey("ProjectId", "MemberId");
+
+                    b.HasIndex("MemberId");
+
+                    b.ToTable("ProjectMembers");
                 });
 
             modelBuilder.Entity("DockerProject.Models.ProjectTask", b =>
@@ -545,21 +551,6 @@ namespace DockerProject.Migrations
 
             modelBuilder.Entity("ApplicationUserProject", b =>
                 {
-                    b.HasOne("DockerProject.Models.Project", null)
-                        .WithMany()
-                        .HasForeignKey("MemberOfId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("DockerProject.Models.ApplicationUser", null)
-                        .WithMany()
-                        .HasForeignKey("MembersId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("ApplicationUserProject1", b =>
-                {
                     b.HasOne("DockerProject.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("StarredById")
@@ -647,6 +638,25 @@ namespace DockerProject.Migrations
                         .IsRequired();
 
                     b.Navigation("Founder");
+                });
+
+            modelBuilder.Entity("DockerProject.Models.ProjectMember", b =>
+                {
+                    b.HasOne("DockerProject.Models.ApplicationUser", "Member")
+                        .WithMany("MemberOf")
+                        .HasForeignKey("MemberId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DockerProject.Models.Project", "Project")
+                        .WithMany("Members")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Member");
+
+                    b.Navigation("Project");
                 });
 
             modelBuilder.Entity("DockerProject.Models.ProjectTask", b =>
@@ -778,6 +788,8 @@ namespace DockerProject.Migrations
                 {
                     b.Navigation("Friends");
 
+                    b.Navigation("MemberOf");
+
                     b.Navigation("Votes");
                 });
 
@@ -789,6 +801,8 @@ namespace DockerProject.Migrations
             modelBuilder.Entity("DockerProject.Models.Project", b =>
                 {
                     b.Navigation("Comments");
+
+                    b.Navigation("Members");
 
                     b.Navigation("Tasks");
                 });

@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace DockerProject.Migrations
 {
     /// <inheritdoc />
-    public partial class FirstModelsAndIdentityFix : Migration
+    public partial class FixMigrations : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -39,6 +39,10 @@ namespace DockerProject.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    PreferredLanguage = table.Column<int>(type: "int", nullable: false),
+                    PreferredTheme = table.Column<int>(type: "int", nullable: false),
+                    ProfilePictureUrl = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     UserName = table.Column<string>(type: "varchar(256)", maxLength: 256, nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
@@ -76,6 +80,8 @@ namespace DockerProject.Migrations
                     Id = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Title = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    HexColor = table.Column<string>(type: "varchar(8)", maxLength: 8, nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4")
                 },
                 constraints: table =>
@@ -255,6 +261,33 @@ namespace DockerProject.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
+                name: "UserFriend",
+                columns: table => new
+                {
+                    UserId = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    FriendId = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UserFriend", x => new { x.UserId, x.FriendId });
+                    table.ForeignKey(
+                        name: "FK_UserFriend_AspNetUsers_FriendId",
+                        column: x => x.FriendId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_UserFriend_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
                 name: "FieldTag",
                 columns: table => new
                 {
@@ -312,23 +345,25 @@ namespace DockerProject.Migrations
                 name: "ProjectMembers",
                 columns: table => new
                 {
-                    MemberOfId = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false)
+                    ProjectId = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    MembersId = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4")
+                    MemberId = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    LastModification = table.Column<DateTime>(type: "datetime(6)", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ProjectMembers", x => new { x.MemberOfId, x.MembersId });
+                    table.PrimaryKey("PK_ProjectMembers", x => new { x.ProjectId, x.MemberId });
                     table.ForeignKey(
-                        name: "FK_ProjectMembers_AspNetUsers_MembersId",
-                        column: x => x.MembersId,
+                        name: "FK_ProjectMembers_AspNetUsers_MemberId",
+                        column: x => x.MemberId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_ProjectMembers_Projects_MemberOfId",
-                        column: x => x.MemberOfId,
+                        name: "FK_ProjectMembers_Projects_ProjectId",
+                        column: x => x.ProjectId,
                         principalTable: "Projects",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -376,17 +411,18 @@ namespace DockerProject.Migrations
                     DeadLine = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     DoneDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     Status = table.Column<int>(type: "int", nullable: false),
-                    ProjectId = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: true)
+                    ProjectParentId = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4")
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Tasks", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Tasks_Projects_ProjectId",
-                        column: x => x.ProjectId,
+                        name: "FK_Tasks_Projects_ProjectParentId",
+                        column: x => x.ProjectParentId,
                         principalTable: "Projects",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -423,8 +459,10 @@ namespace DockerProject.Migrations
                 {
                     Id = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Content = table.Column<string>(type: "varchar(500)", maxLength: 500, nullable: false)
+                    Content = table.Column<string>(type: "varchar(5000)", maxLength: 5000, nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
+                    Date = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    IsEdited = table.Column<bool>(type: "tinyint(1)", nullable: false),
                     AuthorId = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     CommentParentId = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: true)
@@ -447,12 +485,14 @@ namespace DockerProject.Migrations
                         name: "FK_Comments_Comments_CommentParentId",
                         column: x => x.CommentParentId,
                         principalTable: "Comments",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Comments_Projects_ProjectParentId",
                         column: x => x.ProjectParentId,
                         principalTable: "Projects",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Comments_Tasks_TaskParentId",
                         column: x => x.TaskParentId,
@@ -489,7 +529,7 @@ namespace DockerProject.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
-                name: "CommentVote",
+                name: "CommentsVotes",
                 columns: table => new
                 {
                     UserId = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false)
@@ -502,15 +542,15 @@ namespace DockerProject.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_CommentVote", x => new { x.UserId, x.CommentId });
+                    table.PrimaryKey("PK_CommentsVotes", x => new { x.UserId, x.CommentId });
                     table.ForeignKey(
-                        name: "FK_CommentVote_AspNetUsers_UserId",
+                        name: "FK_CommentsVotes_AspNetUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_CommentVote_Comments_CommentId",
+                        name: "FK_CommentsVotes_Comments_CommentId",
                         column: x => x.CommentId,
                         principalTable: "Comments",
                         principalColumn: "Id",
@@ -581,8 +621,8 @@ namespace DockerProject.Migrations
                 column: "TaskParentId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_CommentVote_CommentId",
-                table: "CommentVote",
+                name: "IX_CommentsVotes_CommentId",
+                table: "CommentsVotes",
                 column: "CommentId");
 
             migrationBuilder.CreateIndex(
@@ -596,9 +636,9 @@ namespace DockerProject.Migrations
                 column: "TagsId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ProjectMembers_MembersId",
+                name: "IX_ProjectMembers_MemberId",
                 table: "ProjectMembers",
-                column: "MembersId");
+                column: "MemberId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Projects_FounderId",
@@ -616,9 +656,14 @@ namespace DockerProject.Migrations
                 column: "TasksId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Tasks_ProjectId",
+                name: "IX_Tasks_ProjectParentId",
                 table: "Tasks",
-                column: "ProjectId");
+                column: "ProjectParentId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserFriend_FriendId",
+                table: "UserFriend",
+                column: "FriendId");
         }
 
         /// <inheritdoc />
@@ -643,7 +688,7 @@ namespace DockerProject.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
-                name: "CommentVote");
+                name: "CommentsVotes");
 
             migrationBuilder.DropTable(
                 name: "FieldProject");
@@ -659,6 +704,9 @@ namespace DockerProject.Migrations
 
             migrationBuilder.DropTable(
                 name: "ProjectTaskTag");
+
+            migrationBuilder.DropTable(
+                name: "UserFriend");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
