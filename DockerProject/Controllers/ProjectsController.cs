@@ -113,10 +113,23 @@ public class ProjectsController(
 
     [Authorize]
     [HttpPost]
-    public IActionResult New(Project project)
+// ADD: string[] selectedFieldIds parameter
+    public IActionResult New(Project project, string[] selectedFieldIds)
     {
         project.FounderId = _userManager.GetUserId(User);
         project.CreatedDate = DateTime.Now;
+
+        if (selectedFieldIds != null && selectedFieldIds.Length > 0)
+        {
+            var fieldsToAdd = _db.Fields
+                .Where(f => selectedFieldIds.Contains(f.Id))
+                .ToList();
+        
+            foreach(var field in fieldsToAdd)
+            {
+                project.Fields.Add(field);
+            }
+        }
 
         _db.Projects.Add(project);
         _db.SaveChanges();
@@ -127,7 +140,9 @@ public class ProjectsController(
     [Authorize]
     public IActionResult Edit(string id)
     {
-        Project? project = _db.Projects.Find(id);
+        Project? project = _db.Projects
+            .Include(p => p.Fields) 
+            .FirstOrDefault(p => p.Id == id);
 
         if (project is null)
             return NotFound();
@@ -140,12 +155,17 @@ public class ProjectsController(
 
     [Authorize]
     [HttpPost]
-    public IActionResult Edit(string id, Project reqProject)
+    public IActionResult Edit(string id, Project reqProject, string[] selectedFieldIds)
     {
-        Project? project = _db.Projects.Find(id);
+        Project? project = _db.Projects
+            .Include(p => p.Fields)
+            .FirstOrDefault(p => p.Id == id);
 
         if (project is null)
             return NotFound();
+
+        // if (project.FounderId == _userManager.GetUserId(User) || User.IsInRole("Admin"))
+        //     return View(project); 
 
         if (project.FounderId == _userManager.GetUserId(User) || User.IsInRole("Admin"))
         {
@@ -153,7 +173,21 @@ public class ProjectsController(
             {
                 project.Title = reqProject.Title;
                 project.Description = reqProject.Description;
-                project.Fields = reqProject.Fields;
+                
+                project.Fields.Clear();
+                
+                if (selectedFieldIds != null && selectedFieldIds.Length > 0)
+                {
+                    var fieldsToAdd = _db.Fields
+                        .Where(f => selectedFieldIds.Contains(f.Id))
+                        .ToList();
+
+                    foreach (var field in fieldsToAdd)
+                    {
+                        project.Fields.Add(field);
+                    }
+                }
+
                 _db.SaveChanges();
                 return RedirectToAction("Index");
             }
