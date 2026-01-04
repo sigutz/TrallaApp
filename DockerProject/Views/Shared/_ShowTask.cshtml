@@ -1,0 +1,52 @@
+﻿@model DockerProject.Models.ProjectTask
+
+@functions {
+
+    public string GetContrastColor(string hexColor)
+    {
+        if (string.IsNullOrEmpty(hexColor)) return "#000000";
+
+        var cleanHex = hexColor.Replace("#", "");
+
+        if (cleanHex.Length != 6) return "#000000"; // Fallback for invalid hex
+
+        var r = Convert.ToInt32(cleanHex.Substring(0, 2), 16);
+        var g = Convert.ToInt32(cleanHex.Substring(2, 2), 16);
+        var b = Convert.ToInt32(cleanHex.Substring(4, 2), 16);
+
+        var yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+
+        return (yiq >= 128) ? "#000000" : "#FFFFFF";
+    }
+
+}
+
+<button class="card p-1" id="btn-launch-task-modal-@Model.Id">
+    <div class="d-flex flex-row gap-1 flex-wrap mb-1">
+        @foreach (Tag tag in Model.Tags)
+        {
+            <div class="rounded px-2 py-0 shadow-sm"
+                 style="background: @tag.HexColor; color: @GetContrastColor(tag.HexColor); font-size: 0.7rem; font-weight: 600;">
+                @tag.Name
+            </div>
+        }
+    </div>
+    @Model.Name
+</button>
+<div class="modal fade" id="task-modal-@Model.Id" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered w-100" role="document" style="transform: translateY(-20%);">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close btn" id="btn-close-task-modal-@Model.Id">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    window.addEventListener('load', function () {
+        $('#btn-launch-task-modal-@Model.Id').click(() => $('#task-modal-@Model.Id').modal('show'));
+        $('#btn-close-task-modal-@Model.Id').click(() => $('#task-modal-@Model.Id').modal('hide'));
+    });
+</script>
