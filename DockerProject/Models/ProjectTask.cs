@@ -10,6 +10,16 @@ public enum TaskStatusEnum
 }
 public class ProjectTask
 {
+    public ProjectTask()
+    {
+        Id = Guid.NewGuid().ToString();
+        Status = TaskStatusEnum.ToDo;
+        AssignedDate = DateTime.Now;
+        Tags = new List<Tag>();
+        Users = new List<ApplicationUser>();
+        Comments = new List<Comment>();
+    }
+    
     [Key] public string Id { get; set; } = Guid.NewGuid().ToString();
 
     [Required] [MaxLength(100)] public string Name { get; set; } = string.Empty;
