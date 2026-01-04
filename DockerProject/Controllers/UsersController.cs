@@ -14,5 +14,8 @@ public class UsersController(
     private readonly UserManager<ApplicationUser> _userManager = userManager;
     private readonly RoleManager<IdentityRole> _roleManager = roleManager;
 
-
+    public IActionResult Index()
+    {
+        return View();
+    }
 }

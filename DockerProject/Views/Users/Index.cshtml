@@ -21,7 +21,7 @@
                 <div class="card-body">
                     <h5 class="card-title">Manage Projects</h5>
                     <p class="card-text">View and edit your current projects.</p>
-                    <a asp-controller="Projects" asp-action="Profile" asp-route-userid="@MyUserManager.GetUserId(User)" class="btn btn-light">Go to Projects</a>
+                    <a asp-controller="Projects" asp-action="Index" asp-route-user="@MyUserManager.GetUserId(User)" class="btn btn-light">Go to Projects</a>
                 </div>
             </div>
         </div>
