@@ -21,10 +21,9 @@ html {
   text-align: start;
 }
 
-body {
-  margin-bottom: 0 !important;
+.bg-prim{
+  background: #00273d;
 }
-
-html {
-  margin-bottom: 0 !important;
+.bg-sec{
+  background: #c2dcff;
 }
