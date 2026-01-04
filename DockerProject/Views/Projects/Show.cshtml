@@ -3,6 +3,7 @@
 
 @inject UserManager<ApplicationUser> UserManager
 @inject SignInManager<ApplicationUser> SignInManager
+@inject DockerProject.Data.ApplicationDbContext _context
 
 @{
     ViewBag.Title = Model.Title;
@@ -10,12 +11,14 @@
 
     ViewData["ProjectFounderId"] = Model.FounderId;
 
+    ViewBag.projectId = Model.Id;
     string currentUserId = UserManager.GetUserId(User);
     bool isAdmin = User.IsInRole("Admin");
     bool isOwner = currentUserId == Model.FounderId;
-    bool isMember = ViewBag.isMember;
-    bool isBanned = ViewBag.isBanned;
-    bool isPending = ViewBag.isPending;
+    bool isMember = _context.ProjectMembers.FirstOrDefault(pm => pm.Status == ProjectMemberStatus.Accepted && pm.MemberId == currentUserId) != null;
+    bool isBanned = _context.ProjectMembers.FirstOrDefault(pm => pm.Status == ProjectMemberStatus.Banned && pm.MemberId == currentUserId) != null;
+    bool isPending = _context.ProjectMembers.FirstOrDefault(pm => pm.Status == ProjectMemberStatus.Pending && pm.MemberId == currentUserId) != null;
+    bool isInvited = _context.ProjectMembers.FirstOrDefault(pm => pm.Status == ProjectMemberStatus.Invited && pm.MemberId == currentUserId) != null;
     bool canEdit = isAdmin || isOwner;
 
     var userStarProject = Model.StarredBy.FirstOrDefault(s => s.Id == currentUserId);
@@ -59,7 +62,6 @@
                         </div>
                     </div>
 
-                    @* --- RIGHT SIDE: Buttons or Info --- *@
                     <div class="d-flex align-items-center gap-2">
 
                         @if (canEdit)
@@ -131,7 +133,7 @@
 
                             @if (!isOwner && !isBanned)
                             {
-                                string textJoin = isMember ? "Leave" : isPending ? "Cancel" : "Ask to join";
+                                string textJoin = isMember ? "Leave" : isInvited? "Accept invitation" :isPending ? "Cancel" : "Ask to join";
                                 <button class="btn btn-outline-secondary btn-sm" onclick="ActionsOnJoin('@Model.Id')">
                                     <div id="join-btn">@textJoin</div>
                                 </button>
@@ -150,9 +152,9 @@
                                             @pendingRequestCount Pending @(pendingRequestCount == 1 ? "request" : "requests")
                                         </button>
                                     }
-
+                                    
                                     <div class="">
-                                        <a class="btn btn-sm "><i class="bi bi-person-fill-add fs-5"></i></a>
+                                        <partial name="_InviteUserToProject" model="_context.ApplicationUsers"/>
                                     </div>
                                     <div class="m-1">
                                         <a class="btn btn-secondary btn-sm "
@@ -163,10 +165,10 @@
                             }
 
                         </div>
-
                     </div>
                 </div>
                 <div class="d-none " id="to-toggle-pendingRequests">
+                    <h3>Requests</h3>
                     @foreach (var pendingRequest in Model.Members.Where(pm => pm.Status == ProjectMemberStatus.Pending))
                     {
                         <div class="m-4 d-flex justify-content-evenly align-items-center "

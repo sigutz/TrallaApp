@@ -124,8 +124,8 @@ public class ProjectsController(
             var fieldsToAdd = _db.Fields
                 .Where(f => selectedFieldIds.Contains(f.Id))
                 .ToList();
-        
-            foreach(var field in fieldsToAdd)
+
+            foreach (var field in fieldsToAdd)
             {
                 project.Fields.Add(field);
             }
@@ -141,7 +141,7 @@ public class ProjectsController(
     public IActionResult Edit(string id)
     {
         Project? project = _db.Projects
-            .Include(p => p.Fields) 
+            .Include(p => p.Fields)
             .FirstOrDefault(p => p.Id == id);
 
         if (project is null)
@@ -173,9 +173,9 @@ public class ProjectsController(
             {
                 project.Title = reqProject.Title;
                 project.Description = reqProject.Description;
-                
+
                 project.Fields.Clear();
-                
+
                 if (selectedFieldIds != null && selectedFieldIds.Length > 0)
                 {
                     var fieldsToAdd = _db.Fields
@@ -264,8 +264,17 @@ public class ProjectsController(
         {
             if (projectMember.Status == ProjectMemberStatus.Banned)
                 return Forbid();
-            project.Members.Remove(projectMember);
-            isActionAsk = false;
+
+            if (projectMember.Status == ProjectMemberStatus.Invited)
+            {
+                projectMember.Status = ProjectMemberStatus.Accepted;
+                isActionAsk = true;
+            }
+            else
+            {
+                project.Members.Remove(projectMember);
+                isActionAsk = false;
+            }
         }
         else //daca nu e banat depune cerearea
         {
@@ -283,8 +292,47 @@ public class ProjectsController(
         }
 
         _db.SaveChanges();
-
         return Json(new { success = true, isActionAsk });
+    }
+    
+    [HttpPost]
+    [Authorize]
+    public IActionResult InviteUser2Project(string projectId, string userId)
+    {
+        var user = _db.ApplicationUsers.Find(userId);
+        Project? project = _db.Projects.Include(p => p.Members).FirstOrDefault(p => p.Id == projectId);
+
+        if (user is null || project is null)
+            return NotFound();
+
+        ProjectMember? projectMember =
+            _db.ProjectMembers.FirstOrDefault(pm => pm.MemberId == userId && pm.ProjectId == projectId);
+
+        if (projectMember is null)
+        {
+            projectMember = new ProjectMember
+            {
+                MemberId = userId,
+                Member = user,
+                ProjectId = projectId,
+                Project = project,
+                Status = ProjectMemberStatus.Invited
+            };
+            _db.ProjectMembers.Add(projectMember);
+
+        }
+        else
+        {
+            if (projectMember.Status == ProjectMemberStatus.Pending)
+            {
+                projectMember.Status = ProjectMemberStatus.Accepted;
+                _db.ProjectMembers.Add(projectMember);
+
+            }
+        }
+        
+        _db.SaveChanges();
+        return Json(new { success = true });
     }
 
     [HttpPost]
@@ -331,4 +379,5 @@ public class ProjectsController(
 
         return Json(new { success = true });
     }
+    
 }
