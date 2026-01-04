@@ -26,7 +26,7 @@ public class ProjectsController(
     }
 
     [Authorize]
-    public IActionResult Index(bool star = false, string? user = null, string? search = null)
+    public IActionResult Index(bool star = false, string? user = null, string? search = null, int page = 1)
     {
         SetAccesRights();
 
@@ -52,11 +52,28 @@ public class ProjectsController(
         {
             projects = projects.Where(p => p.Title.Contains(search) || p.Description.Contains(search));
         }
+        int perPage = 8;
+        var offset = 0;
+        int currentPage = page < 1 ? 1 : page;
+        
+        if (currentPage != 0 )
+        {
+            offset = (currentPage - 1) * perPage;
+        }
 
+        var paginatedProjects = projects.Skip(offset).Take(perPage);
+        
         ViewBag.CurrentStar = star;
         ViewBag.CurrentUser = user;
         ViewBag.CurrentSearch = search;
-        ViewBag.Projects = projects;
+        ViewBag.Projects = paginatedProjects;
+        
+        int totalItems = projects.Count();
+        var lastPage = (int)Math.Ceiling((double)totalItems / perPage);
+        
+        ViewBag.CurrentPage = page;
+        ViewBag.LastPage = lastPage;
+        
 
         if (TempData.ContainsKey("message"))
         {
