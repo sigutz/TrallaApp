@@ -55,8 +55,8 @@
                                     <span class="badge js-contrast"
                                           data-hex="@field.HexColor"
                                           style="background-color: @field.HexColor;">
-                        @field.Title
-                    </span>
+                                        @field.Title
+                                    </span>
                                 }
                             }
                         </div>
@@ -283,7 +283,328 @@
 
         </div>
     </div>
+    
+    
+    <!-- În Views/Projects/Show.cshtml -->
+
+<div class="tasks-container">
+    <!-- Lista de task-uri existente -->
+    <div id="tasks-list">
+        @foreach(var task in Model.Tasks)
+        {
+            <div class="task-card" data-task-id="@task.Id">
+                <div class="task-header">
+                    <h5>@task.Name</h5>
+                    <span class="task-status status-@task.Status.ToString().ToLower()">
+                        @task.Status
+                    </span>
+                </div>
+                @if(!string.IsNullOrEmpty(task.Description))
+                {
+                    <p class="task-description">@task.Description</p>
+                }
+                <div class="task-meta">
+                    <small>📅 @task.DeadLine.ToString("MMM dd")</small>
+                </div>
+                
+                @if(Model.FounderId == User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value)
+                {
+                    <div class="task-actions">
+                        <button class="btn-small" onclick="editTask('@task.Id', '@task.Name', '@task.Description')">✏️</button>
+                        <button class="btn-small btn-danger" onclick="deleteTask('@task.Id')">🗑️</button>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+    
+    <!-- Buton Add Task -->
+    @if(Model.FounderId == User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value)
+    {
+        <button id="add-task-btn" class="add-task-button" onclick="showTaskForm()">
+            ➕ Add a task
+        </button>
+        
+        <!-- Form pentru task nou (ascuns inițial) -->
+        <div id="task-form" class="task-form" style="display: none;">
+            <input type="text" id="task-name" class="task-input" placeholder="Enter task name..." />
+            <textarea id="task-description" class="task-textarea" placeholder="Add description (optional)..." rows="2"></textarea>
+            <input type="date" id="task-deadline" class="task-input" />
+            
+            <div class="task-form-actions">
+                <button class="btn-primary" onclick="saveTask('@Model.Id')">Add task</button>
+                <button class="btn-secondary" onclick="hideTaskForm()">✕</button>
+            </div>
+        </div>
+    }
 </div>
+
+<style>
+.tasks-container {
+    max-width: 800px;
+    margin: 20px 0;
+}
+
+.task-card {
+    background: white;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    transition: box-shadow 0.2s;
+}
+
+.task-card:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.task-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.task-header h5 {
+    margin: 0;
+    font-size: 16px;
+}
+
+.task-status {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.status-todo { background: #e3e3e3; color: #333; }
+.status-inprogress { background: #ffeaa7; color: #d63031; }
+.status-review { background: #74b9ff; color: #0984e3; }
+.status-done { background: #55efc4; color: #00b894; }
+
+.task-description {
+    color: #666;
+    font-size: 14px;
+    margin: 8px 0;
+}
+
+.task-meta {
+    font-size: 12px;
+    color: #999;
+}
+
+.task-actions {
+    margin-top: 8px;
+    display: flex;
+    gap: 8px;
+}
+
+.add-task-button {
+    width: 100%;
+    padding: 10px;
+    background: transparent;
+    border: 2px dashed #ddd;
+    border-radius: 8px;
+    color: #666;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.add-task-button:hover {
+    background: #f5f5f5;
+    border-color: #999;
+    color: #333;
+}
+
+.task-form {
+    background: white;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    margin-bottom: 12px;
+}
+
+.task-input, .task-textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-family: inherit;
+}
+
+.task-input:focus, .task-textarea:focus {
+    outline: none;
+    border-color: #0984e3;
+}
+
+.task-form-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-primary {
+    background: #0984e3;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn-primary:hover {
+    background: #0770c9;
+}
+
+.btn-secondary {
+    background: transparent;
+    border: none;
+    padding: 8px;
+    cursor: pointer;
+    font-size: 18px;
+    color: #666;
+}
+
+.btn-small {
+    background: transparent;
+    border: 1px solid #ddd;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.btn-small.btn-danger:hover {
+    background: #ff7675;
+    border-color: #d63031;
+    color: white;
+}
+</style>
+
+<script>
+function showTaskForm() {
+    document.getElementById('add-task-btn').style.display = 'none';
+    document.getElementById('task-form').style.display = 'block';
+    document.getElementById('task-name').focus();
+}
+
+function hideTaskForm() {
+    document.getElementById('add-task-btn').style.display = 'block';
+    document.getElementById('task-form').style.display = 'none';
+    // Clear form
+    document.getElementById('task-name').value = '';
+    document.getElementById('task-description').value = '';
+    document.getElementById('task-deadline').value = '';
+}
+
+function saveTask(projectId) {
+    const name = document.getElementById('task-name').value.trim();
+    const description = document.getElementById('task-description').value.trim();
+    const deadline = document.getElementById('task-deadline').value;
+    
+    if (!name) {
+        document.getElementById('task-name').focus();
+        return;
+    }
+    
+    fetch('/ProjectTasks/Create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `projectId=${projectId}&name=${encodeURIComponent(name)}&description=${encodeURIComponent(description)}&deadline=${deadline}`
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            // Adaugă task-ul în listă fără refresh
+            addTaskToList(data.taskId, name, description, deadline);
+            hideTaskForm();
+        }
+    })
+    .catch(err => console.error('Error:', err));
+}
+
+function addTaskToList(id, name, description, deadline) {
+    const taskCard = document.createElement('div');
+    taskCard.className = 'task-card';
+    taskCard.setAttribute('data-task-id', id);
+    taskCard.innerHTML = `
+        <div class="task-header">
+            <h5>${name}</h5>
+            <span class="task-status status-todo">ToDo</span>
+        </div>
+        ${description ? `<p class="task-description">${description}</p>` : ''}
+        <div class="task-meta">
+            <small>📅 ${deadline || 'No deadline'}</small>
+        </div>
+        <div class="task-actions">
+            <button class="btn-small" onclick="editTask('${id}', '${name}', '${description}')">✏️</button>
+            <button class="btn-small btn-danger" onclick="deleteTask('${id}')">🗑️</button>
+        </div>
+    `;
+    
+    document.getElementById('tasks-list').appendChild(taskCard);
+}
+
+function deleteTask(taskId) {
+    if (!confirm('Delete this task?')) return;
+    
+    fetch('/ProjectTasks/Delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `id=${taskId}`
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            document.querySelector(`[data-task-id="${taskId}"]`).remove();
+        }
+    });
+}
+
+// ESC key pentru a închide form-ul
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && document.getElementById('task-form').style.display === 'block') {
+        hideTaskForm();
+    }
+});
+
+function updateTask(taskId) {
+    const name = document.getElementById(`edit-name-${taskId}`).value.trim();
+    const description = document.getElementById(`edit-desc-${taskId}`).value.trim();
+
+    if (!name) return;
+
+    fetch('/ProjectTasks/Edit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `id=${taskId}&name=${encodeURIComponent(name)}&description=${encodeURIComponent(description)}`
+    })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                // Reconstruiește task card-ul cu datele noi
+                const taskCard = document.querySelector(`[data-task-id="${taskId}"]`);
+                taskCard.innerHTML = `
+                <div class="task-header">
+                    <h5>${name}</h5>
+                    <span class="task-status status-todo">ToDo</span>
+                </div>
+                ${description ? `<p class="task-description">${description}</p>` : ''}
+                <div class="task-actions">
+                    <button class="btn-small" onclick="editTask('${taskId}', '${name.replace(/'/g, "\\'")}', '${description.replace(/'/g, "\\'")}')">✏️</button>
+                    <button class="btn-small btn-danger" onclick="deleteTask('${taskId}')">🗑️</button>
+                </div>
+            `;
+            }
+        });
+}
+</script>
+   
+</div>
+
 
 <script>
     // Wait for the HTML to be ready
@@ -303,3 +624,4 @@
 
     });
 </script>
+
