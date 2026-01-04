@@ -128,6 +128,29 @@ function ActionsOnJoin(projectid) {
     }).catch(error => console.error("Error:", error));
 }
 
+function InviteUser(projectId, userId){
+    console.log(projectId);
+    console.log(userId);
+    let formData = new FormData();
+    formData.append('projectId', projectId);
+    formData.append('userId', userId);
+    fetch(
+        '/Projects/InviteUser2Project/',
+        {
+            method: 'POST',
+            body:formData
+        }
+    ).then (response => {
+        if(response.ok)
+            return response.json();
+        throw Error(response.statusText)
+    }).then(data => {
+        if (data.success){
+            console.log(projectId);
+            console.log(userId);
+        }
+    }).catch(error => console.error("Error:", error));
+}
 function RespondJoinRequest(projectId, memberId, accepted) {
     let formData = new FormData();
     formData.append('projectId', projectId);
@@ -148,13 +171,15 @@ function RespondJoinRequest(projectId, memberId, accepted) {
         if (data.success) {
             const pendingRequest = document.getElementById('pending-request-' + projectId + '-' + memberId);
             pendingRequest.classList.replace('d-flex', 'd-none');
-
-            if (data.nrAnyPendReqLeft === 0) {
+            console.log(data.nrAnyPendReqLeft)
+            if (data.nrAnyPendReqLeft == 0) {
                 const btnShowPendReq = document.getElementById('btn-show-pend-req');
                 btnShowPendReq.classList.add('d-none');
-            } else if (data.nrAnyPendReqLeft === 1) {
+                console.log('fara oameni');
+            } else if (data.nrAnyPendReqLeft == 1) {
                 const btnShowPendReq = document.getElementById('btn-show-pend-req');
                 btnShowPendReq.innerText = 'request';
+                
             }
         }
     }).catch(error => console.error('Eroare:', error));

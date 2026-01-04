@@ -1,0 +1,61 @@
+﻿@model IQueryable<DockerProject.Models.ApplicationUser>
+
+<button type="button" id="btnLaunchModal" class="btn btn-sm">
+    <i class="bi bi-person-fill-add fs-5"></i>
+</button>
+
+<div class="modal fade" id="fieldModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header d-flex justify-content-between">
+                <h5 class="modal-title">Invite Users</h5>
+                <button type="button" class="close btn" id="btnCloseIcon">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <label>Search:</label>
+                <input type="text" class="form-control" id="searchInput" autocomplete="off"/>
+                <br/>
+
+                <div class="d-block" id="sugestions" style="max-height: 200px; overflow-y: auto;">
+                    @foreach (var user in Model)
+                    {
+                        <div class="decautat d-none p-2 border-bottom justify-content-between align-items-center">
+                            <span>@user.Email</span>
+                            <button type="button" class="btn btn-sm btn-secondary"
+                                    onclick="InviteUser('@ViewBag.projectId','@user.Id')">
+                                Add
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="btnCloseBtn">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    window.addEventListener('load', function () {
+        $('#btnLaunchModal').click(() => $('#fieldModal').modal('show'));
+        $('#btnCloseIcon, #btnCloseBtn').click(() => $('#fieldModal').modal('hide'));
+
+        $('#searchInput').keyup(function () {
+            var searchVal = $(this).val().toLowerCase();
+            var hasMatch = false;
+
+            $('.decautat').each(function () {
+                var text = $(this).find('span').text().toLowerCase();
+                if (text.indexOf(searchVal) > -1 && searchVal !== "") {
+                    $(this).removeClass('d-none').addClass('d-flex');
+                    hasMatch = true;
+                } else {
+                    $(this).addClass('d-none').removeClass('d-flex');
+                }
+            });
+        });
+    });
+</script>
