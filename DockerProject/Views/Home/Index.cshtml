@@ -1,76 +1,280 @@
-﻿@{
+﻿
+@{
     ViewData["Title"] = "Home Page";
     Layout = null;
 }
 
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-
-<style>
-    ::-webkit-scrollbar {
-        width: 10px; 
-        height: 10px; 
-    }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>@ViewData["Title"] - Tralla</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Roboto Light', sans-serif;
+        }
+        
+        ::-webkit-scrollbar {
+            width: 10px; 
+            height: 10px; 
+        }
     
-    ::-webkit-scrollbar-track {
-        background: black;
-    }
+        ::-webkit-scrollbar-track {
+            background: black;
+        }
 
-    ::-webkit-scrollbar-thumb { 
-        background: #888;
-        /* border-radius: 5px; */
-    }
+        ::-webkit-scrollbar-thumb { 
+            background: #888;
+        }
 
-    ::-webkit-scrollbar-thumb:hover {
-        background: #555;
-    }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
 
-    ::-webkit-scrollbar-button {
-        display: none;
-    }
+        ::-webkit-scrollbar-button {
+            display: none;
+        }
     
-    .snap-container {
-        height: 100vh;
-        overflow-y: auto;
-        scroll-snap-type: y mandatory;
-        scroll-behavior: smooth;
-    }
+        .snap-container {
+            height: 100vh;
+            overflow-y: auto;
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+        }
 
-    .snap-section {
-        height: 100vh;
-        scroll-snap-align: start;
-    }
+        .snap-section {
+            height: 100vh;
+            scroll-snap-align: start;
+            position: relative;
+        }
     
-    .zona1{
-        background: linear-gradient(135deg,#81d8e5 , #8461f4);
-    }
-</style>
+        /* Section 1 - Landing Page */
+        .zona1 {
+            background: linear-gradient(135deg, #87CEEB 0%, #4FA4D9 50%, #2E7AB8 100%);
+        }
+        
+        .brand-text {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #000;
+        }
+        
+        .login-btn {
+            background: transparent;
+            border: 2px solid #000;
+            padding: 10px 30px;
+            font-size: 1rem;
+            font-weight: bold;
+            color: #000;
+            border-radius: 8px;
+            text-decoration: none;
+            display: inline-block;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+        
+        .login-btn:hover {
+            background: #000;
+            color: #fff;
+        }
+        
+        .hero-text {
+            font-size: 3.5rem;
+            font-weight: bold;
+            color: #000;
+            line-height: 1.2;
+            font-style: italic;
+        }
+        
+        .join-btn {
+            background: linear-gradient(90deg, #ff3131, #ff914d);
+            border: none;
+            padding: 15px 50px;
+            font-size: 1rem;
+            font-weight: bold;
+            color: white;
+            border-radius: 8px;
+            text-decoration: none;
+            display: inline-block;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .join-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            color: white;
+        }
+        
+        /* Section 2 - What is Tralla */
+        .zona2 {
+            background: linear-gradient(135deg, #87CEEB 0%, #4FA4D9 50%, #1a5276 100%);
+        }
+        
+        .section-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #000;
+        }
+        
+        .feature-text {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #000;
+            font-style: italic;
+        }
 
+        /* Section 3 - Stats Dashboard */
+        .zona3 {
+            background: linear-gradient(135deg, #87CEEB 0%, #4FA4D9 50%, #2E7AB8 100%);
+            position: relative;
+        }
+
+        .stats-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .chart-image {
+            position: absolute;
+            left: 60px;
+            top: 50%;
+            transform: translateY(-50%);
+            margin: 0;
+        }
+
+        .chart-image img {
+            max-width: 600px;
+            height: auto;
+            display: block;
+        }
+
+        .chart-image figcaption {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #000;
+            margin-top: 16px;
+            text-align: center;
+        }
+
+        .donut-image {
+            position: absolute;
+            right: 50px;
+            top: 100px;
+            
+            margin: 0;
+            justify-content: center;
+        }
+
+        .donut-image img {
+            max-width: 400px;
+            height: auto;
+            display: block;
+        }
+
+        .donut-image figcaption {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #000;
+            margin-top: 16px;
+            text-align: center;
+        }
+
+        .cloud-image {
+            position: absolute;
+            right: 120px;
+            bottom: 100px;
+            margin: 0;
+            justify-content: center;
+        }
+
+        .cloud-image img {
+            max-width: 400px;
+            height: auto;
+            display: block;
+        }
+
+        .cloud-image figcaption {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #000;
+            margin-top: 16px;
+            text-align: center;
+        }
+
+        .centered-join-button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+    </style>
+</head>
 <body>
 
 <div class="snap-container">
-    <h1 class="position-absolute top-0 start-0 m-4">Tralla</h1>
-
-    <div class="snap-section d-flex align-items-center justify-content-center text-white zona1">
-        <div class="text-center">
-            <a class="btn " asp-controller="Projects" asp-action="Index"><h1>JOIN NOW</h1></a>
+    <!-- Section 1: Landing Page -->
+    <div class="snap-section zona1 d-flex flex-column">
+        <div class="position-absolute top-0 start-0 m-4">
+            <span class="brand-text">Tralla</span>
+        </div>
+        <div class="position-absolute top-0 end-0 m-4">
+            <a class="login-btn" asp-area="Identity" asp-page="/Account/Login">LOG IN</a>
+        </div>
+        <div class="flex-grow-1 d-flex align-items-center justify-content-center">
+            <div class="text-center">
+                <h1 class="hero-text mb-5">
+                    Capture, organize,<br>
+                    and tackle your to-dos<br>
+                    from anywhere.
+                </h1>
+                <a class="join-btn" asp-area="Identity" asp-page="/Account/Register">JOIN US</a>
+            </div>
         </div>
     </div>
 
-    <div class="snap-section bg-success d-flex align-items-center justify-content-center text-white ">
-
-        <div class="text-center">
-            <p>I am the second full-screen slide.</p>
+    <!-- Section 2: What is Tralla -->
+    <div class="snap-section zona2 d-flex flex-column">
+        <div class="position-absolute top-0 start-0 m-4">
+            <span class="section-title">What is Tralla?</span>
+        </div>
+        <div class="flex-grow-1 d-flex align-items-center justify-content-center">
+            <div class="text-center">
+                <p class="feature-text mb-5">Your productivity powerhouse</p>
+                <p class="feature-text mb-5">From idea to action</p>
+                <p class="feature-text">Help others follow their dreams</p>
+            </div>
         </div>
     </div>
 
-    <div class="snap-section bg-danger d-flex align-items-center justify-content-center text-white">
-        <div class="text-center">
-            <h1>Zone 3</h1>
-            <p>I am the final destination.</p>
+    <!-- Section 3: Stats Dashboard -->
+    <div class="snap-section zona3">
+        <div class="stats-container">
+            <div>
+                <!-- Line Chart Image -->
+                <figure class="chart-image">
+                    <img src="images/graph.png" alt="Members Chart">
+                    <figcaption>Our Members</figcaption>
+                </figure>
+        
+                <!-- Donut Chart Image -->
+                <figure class="donut-image">
+                    <img src="images/pie.png" alt="Fields Chart">
+                    <figcaption>Our members time management</figcaption>
+                </figure>
+        
+                <!-- Centered Join Button -->
+                <div class="centered-join-button">
+                    <a class="join-btn" asp-area="Identity" asp-page="/Account/Register">SIGN UP NOW!</a>
+                </div>
+            </div>
         </div>
     </div>
-
 </div>
 
 </body>
-
+</html>
