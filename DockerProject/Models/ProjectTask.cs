@@ -43,5 +43,7 @@ public class ProjectTask
     public virtual ICollection<ApplicationUser> Users { get; set; } = new List<ApplicationUser>();
 
     public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
+    
+    public string? MediaUrl { get; set; }
 
 }

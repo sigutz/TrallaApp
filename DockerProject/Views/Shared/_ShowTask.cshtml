@@ -8,17 +8,7 @@
 @functions {
 
     // Funcția ta pentru contrast
-    public string GetContrastColor(string hexColor)
-    {
-        if (string.IsNullOrEmpty(hexColor)) return "#000000";
-        var cleanHex = hexColor.Replace("#", "");
-        if (cleanHex.Length != 6) return "#000000";
-        var r = Convert.ToInt32(cleanHex.Substring(0, 2), 16);
-        var g = Convert.ToInt32(cleanHex.Substring(2, 2), 16);
-        var b = Convert.ToInt32(cleanHex.Substring(4, 2), 16);
-        var yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
-        return (yiq >= 128) ? "#000000" : "#FFFFFF";
-    }
+
 
 }
 
@@ -32,7 +22,7 @@
         @foreach (Tag tag in Model.Tags)
         {
             <div class="rounded px-2 py-0 shadow-sm"
-                 style="background: @tag.HexColor; color: @GetContrastColor(tag.HexColor); font-size: 0.65rem; font-weight: 700;">
+                 style="background: @tag.HexColor; color: @Helper.GetContrastColor(tag.HexColor); font-size: 0.65rem; font-weight: 700;">
                 @tag.Name
             </div>
         }
@@ -128,8 +118,28 @@
             <div class="modal-body p-0">
                 <div class="container-fluid">
                     <div class="row" style="min-height: 60vh;">
-
                         <div class="col-lg-8 col-md-7 p-4 bg-white" style="border-right: 1px solid #eee;">
+                            <div class="mb-4">
+                                <h6 class="text-uppercase text-muted small fw-bold mb-2">Tags</h6>
+                                <div class="d-flex flex-wrap gap-2">
+                                    @foreach (var tag in Model.Tags)
+                                    {
+                                        <span class="badge rounded-pill border d-flex align-items-center gap-1"
+                                              id="tag-badge-@tag.Id"
+                                              style="background-color: @tag.HexColor; color: @Helper.GetContrastColor(tag.HexColor);">
+                                            @tag.Name
+
+                                            <i class="bi bi-x-lg"
+                                               style="cursor: pointer; opacity: 0.6;"
+                                               onmouseover="this.style.opacity=1"
+                                               onmouseout="this.style.opacity=0.6"
+                                               onclick="removeTag('@tag.Id', '@Model.Id')"></i>
+                                        </span>
+                                    }
+
+                                    <partial name="_SelectTag.cshtml" model="@Model"/>
+                                </div>
+                            </div>
 
                             <div class="mb-4">
                                 <div class="d-flex justify-content-between align-items-center mb-2"
@@ -191,20 +201,158 @@
                                 <div class="col-md-6">
                                     <h6 class="text-uppercase text-muted small fw-bold mb-2">Details</h6>
                                     <ul class="list-unstyled small">
-                                        <li class="mb-2 d-flex justify-content-between">
-                                            <span class="text-muted">Status:</span>
-                                            <span class="badge bg-secondary">@Model.Status</span>
-                                        </li>
+
                                         <li class="mb-2 d-flex justify-content-between">
                                             <span class="text-muted">Created:</span>
                                             <span class="fw-bold">@Model.AssignedDate.ToString("dd MMM yyyy")</span>
                                         </li>
-                                        <li class="mb-2 d-flex justify-content-between">
+
+                                        <li class="mb-2 d-flex justify-content-between align-items-center height-control">
+                                            <span class="text-muted">Status:</span>
+
+                                            <div id="to-toggle-@Model.Id-status-2" class="d-block">
+                                                <span class="badge bg-secondary"
+                                                      style="cursor: pointer; transition: 0.2s;"
+                                                      onmouseover="this.classList.replace('bg-secondary', 'bg-dark')"
+                                                      onmouseout="this.classList.replace('bg-dark', 'bg-secondary')"
+                                                      onclick="toggle('@Model.Id-status-1'); toggle('@Model.Id-status-2')"
+                                                      title="Click to change status">@Model.Status
+                                                    <i class="bi bi-pencil-fill ms-1" style="font-size: 0.7em;"></i>
+                                                </span>
+                                            </div>
+
+                                            <div id="to-toggle-@Model.Id-status-1" class="d-none">
+                                                <div class="input-group input-group-sm">
+                                                    <select class="form-select form-select-sm"
+                                                            id="input-status-@Model.Id">
+                                                        @foreach (var status in Enum.GetValues(typeof(DockerProject.Models.TaskStatusEnum)))
+                                                        {
+                                                            <!option value="@status"
+                                                                     @(Model.Status.Equals(status) ? "selected" : "")>
+                                                                @status
+                                                            </!option>
+                                                        }
+                                                    </select>
+                                                    <button class="btn btn-success"
+                                                            type="button"
+                                                            onclick="ajaxEditTaskStatus('@Model.Id', document.getElementById('input-status-@Model.Id').value)">
+                                                        <i class="bi bi-check"></i>
+                                                    </button>
+                                                    <button class="btn btn-outline-secondary"
+                                                            type="button"
+                                                            onclick="toggle('@Model.Id-status-1'); toggle('@Model.Id-status-2')">
+                                                        <i class="bi bi-x"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </li>
+
+
+                                        <li class="mb-2 d-flex justify-content-between align-items-center height-control">
                                             <span class="text-muted">Deadline:</span>
-                                            <span
-                                                class="fw-bold text-danger">@Model.DeadLine.ToString("dd MMM yyyy")</span>
+
+                                            <div id="to-toggle-@Model.Id-deadline-2" class="d-block">
+                                                <span class="fw-bold text-danger"
+                                                      id="display-deadline-@Model.Id"
+                                                      style="cursor: pointer; border-bottom: 1px dashed transparent;"
+                                                      onmouseover="this.style.borderBottom='1px dashed #dc3545'"
+                                                      onmouseout="this.style.borderBottom='1px dashed transparent'"
+                                                      onclick="toggle('@Model.Id-deadline-1'); toggle('@Model.Id-deadline-2')"
+                                                      title="Click to edit deadline">
+                                                    @Model.DeadLine.ToString("dd MMM yyyy HH:mm")
+                                                    <i class="bi bi-pencil-fill ms-1 text-muted"
+                                                       style="font-size: 0.7em;"></i>
+                                                </span>
+                                            </div>
+
+                                            <div id="to-toggle-@Model.Id-deadline-1" class="d-none">
+                                                <div class="input-group input-group-sm">
+                                                    <input type="datetime-local"
+                                                           class="form-control"
+                                                           id="input-deadline-@Model.Id"
+                                                           value="@Model.DeadLine.ToString("yyyy-MM-ddTHH:mm")">
+
+                                                    <button class="btn btn-success"
+                                                            type="button"
+                                                            onclick="ajaxEditTaskDeadline('@Model.Id', document.getElementById('input-deadline-@Model.Id').value)">
+                                                        <i class="bi bi-check"></i>
+                                                    </button>
+                                                    <button class="btn btn-outline-secondary"
+                                                            type="button"
+                                                            onclick="toggle('@Model.Id-deadline-1'); toggle('@Model.Id-deadline-2')">
+                                                        <i class="bi bi-x"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </li>
+                                        <li>
+                                            <div class="mt-4">
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <h6 class="text-uppercase text-muted small fw-bold m-0">Creative
+                                                        Media</h6>
+
+                                                    <div class="d-flex gap-2">
+                                                        <input type="file" id="media-upload-@Model.Id" class="d-none"
+                                                               accept="image/*,video/*"
+                                                               onchange="ajaxUploadMedia('@Model.Id', this)">
+
+                                                        <button class="btn btn-sm btn-outline-primary py-0 px-2"
+                                                                title="Upload Photo/Video"
+                                                                onclick="document.getElementById('media-upload-@Model.Id').click()">
+                                                            <i class="bi bi-upload"></i>
+                                                        </button>
+
+                                                        <button
+                                                            class="btn btn-sm btn-outline-danger py-0 px-2 @(string.IsNullOrEmpty(Model.MediaUrl) ? "d-none" : "")"
+                                                            id="btn-delete-media-@Model.Id"
+                                                            title="Remove Media"
+                                                            onclick="ajaxDeleteMedia('@Model.Id')">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                <div class="p-2 bg-light rounded text-center border position-relative"
+                                                     style="min-height: 120px;">
+
+                                                    <div id="media-spinner-@Model.Id"
+                                                         class="d-none position-absolute top-50 start-50 translate-middle">
+                                                        <div class="spinner-border text-primary" role="status"></div>
+                                                    </div>
+
+                                                    <div id="media-container-@Model.Id">
+                                                        @if (!string.IsNullOrEmpty(Model.MediaUrl))
+                                                        {
+                                                            var ext = System.IO.Path.GetExtension(Model.MediaUrl).ToLower();
+                                                            if (ext == ".mp4" || ext == ".webm" || ext == ".ogg")
+                                                            {
+                                                                <video controls class="img-fluid rounded"
+                                                                       style="max-height: 300px; width: 100%;">
+                                                                    <source src="@Model.MediaUrl"
+                                                                            type="video/@ext.Substring(1)">
+                                                                    Your browser does not support the video tag.
+                                                                </video>
+                                                            }
+                                                            else
+                                                            {
+                                                                <img src="@Model.MediaUrl" class="img-fluid rounded"
+                                                                     style="max-height: 300px; object-fit: contain;"
+                                                                     alt="Creative Direction"/>
+                                                            }
+                                                        }
+                                                        else
+                                                        {
+                                                            <div class="text-muted py-4 opacity-50">
+                                                                <i class="bi bi-images fs-1"></i>
+                                                                <p class="small m-0">No media uploaded</p>
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </li>
                                     </ul>
+
                                 </div>
 
                                 <div class="col-md-6">
@@ -226,23 +374,6 @@
                                             <span class="small text-muted">Unassigned</span>
                                         }
                                     </div>
-                                </div>
-                            </div>
-
-                            <div class="mt-4">
-                                <h6 class="text-uppercase text-muted small fw-bold mb-2">Tags</h6>
-                                <div class="d-flex flex-wrap gap-2">
-                                    @foreach (Tag tag in Model.Tags)
-                                    {
-                                        <span class="badge rounded-pill border"
-                                              style="background-color: @tag.HexColor; color: @GetContrastColor(tag.HexColor);">
-                                            @tag.Name
-                                        </span>
-                                    }
-                                    <button class="btn btn-sm btn-outline-secondary rounded-circle"
-                                            style="width: 24px; height: 24px; padding: 0;">
-                                        <i class="bi bi-plus"></i>
-                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -297,9 +428,9 @@
                                             </div>
 
                                             <div class="input-group">
-                    <textarea name="Content" class="form-control form-control-sm"
-                              placeholder="Write a comment..." rows="1"
-                              style="resize:none;" required></textarea>
+                                                <textarea name="Content" class="form-control form-control-sm"
+                                                          placeholder="Write a comment..." rows="1"
+                                                          style="resize:none;" required></textarea>
                                                 <button type="submit" class="btn btn-primary btn-sm">
                                                     <i class="bi bi-send-fill"></i>
                                                 </button>

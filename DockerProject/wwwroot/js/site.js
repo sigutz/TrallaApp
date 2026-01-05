@@ -553,3 +553,147 @@ function ajaxUpdateProjectFields(projectId) {
         }
     }).catch(error => console.error(error));
 }
+
+
+function ajaxEditTaskStatus(taskId, statusValue) {
+    let formData = new FormData();
+    formData.append('taskId', taskId);
+    // The controller expects 'statusEnum', which can parse the string name of the enum
+    formData.append('statusEnum', statusValue);
+
+    fetch('/ProjectTasks/EditStatus/', {
+        method: 'POST',
+        body: formData
+    }).then(response => {
+        if (response.ok) return response.json();
+        throw Error(response.statusText);
+    }).then(data => {
+        if (data.success) {
+            // Close edit mode
+            toggle(taskId + '-status-1');
+            toggle(taskId + '-status-2');
+
+            // Refresh the whole page or update the specific badge text/color visually
+            // For simplicity, we just reload to reflect the icon changes in the header as well
+            location.reload();
+
+            // OR if you want to avoid reload, you must manually update the text:
+            // document.querySelector(`#to-toggle-${taskId}-status-2 .badge`).innerText = statusValue;
+        }
+    }).catch(error => console.error(error));
+}
+
+function ajaxEditTaskDeadline(taskId, rawDateValue) {
+    // rawDateValue comes from datetime-local like "2023-10-25T14:30"
+    if(!rawDateValue) {
+        alert("Please select a date and time");
+        return;
+    }
+
+    let formData = new FormData();
+    formData.append('taskId', taskId);
+    formData.append('deadline', rawDateValue);
+
+    fetch('/ProjectTasks/EditDeadLine/', {
+        method: 'POST',
+        body: formData
+    }).then(response => {
+        if (response.ok) return response.json();
+        throw Error(response.statusText);
+    }).then(data => {
+        if (data.success) {
+            // Close edit mode
+            toggle(taskId + '-deadline-1');
+            toggle(taskId + '-deadline-2');
+
+            // Format date for display (Client side formatting is a bit tricky, simple approach:)
+            const dateObj = new Date(rawDateValue);
+            const options = { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit' };
+            const prettyDate = dateObj.toLocaleDateString('en-GB', options); // Adjust locale as needed
+
+            // Update the display text
+            const displaySpan = document.getElementById('display-deadline-' + taskId);
+            if (displaySpan) {
+                // Keep the icon when updating text
+                displaySpan.innerHTML = `${prettyDate} <i class="bi bi-pencil-fill ms-1 text-muted" style="font-size: 0.7em;"></i>`;
+            }
+        }
+    }).catch(error => console.error(error));
+}
+
+function ajaxUploadMedia(taskId, inputElement) {
+    if (inputElement.files.length === 0) return;
+
+    let file = inputElement.files[0];
+    let formData = new FormData();
+    formData.append('taskId', taskId);
+    formData.append('mediaFile', file);
+
+    // UI: Show loading
+    const container = document.getElementById('media-container-' + taskId);
+    const spinner = document.getElementById('media-spinner-' + taskId);
+    container.style.opacity = '0.3';
+    spinner.classList.remove('d-none');
+
+    fetch('/ProjectTasks/UploadMedia', {
+        method: 'POST',
+        body: formData
+    })
+        .then(response => response.json())
+        .then(data => {
+            // UI: Reset loading
+            spinner.classList.add('d-none');
+            container.style.opacity = '1';
+
+            if (data.success) {
+                const ext = data.url.split('.').pop().toLowerCase();
+                let html = '';
+
+                // Check if video or image
+                if (['mp4', 'webm', 'ogg'].includes(ext)) {
+                    html = `<video controls class="img-fluid rounded" style="max-height: 300px; width: 100%;">
+                            <source src="${data.url}" type="video/${ext}">
+                        </video>`;
+                } else {
+                    html = `<img src="${data.url}" class="img-fluid rounded" style="max-height: 300px; object-fit: contain;" />`;
+                }
+
+                container.innerHTML = html;
+                document.getElementById('btn-delete-media-' + taskId).classList.remove('d-none');
+            } else {
+                alert('Upload failed: ' + (data.message || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            spinner.classList.add('d-none');
+            container.style.opacity = '1';
+        });
+}
+
+function ajaxDeleteMedia(taskId) {
+    if(!confirm("Are you sure? This cannot be undone.")) return;
+
+    let formData = new FormData();
+    formData.append('taskId', taskId);
+
+    fetch('/ProjectTasks/DeleteMedia', {
+        method: 'POST',
+        body: formData
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const container = document.getElementById('media-container-' + taskId);
+                container.innerHTML = `
+                <div class="text-muted py-4 opacity-50">
+                    <i class="bi bi-images fs-1"></i>
+                    <p class="small m-0">No media uploaded</p>
+                </div>`;
+
+                document.getElementById('btn-delete-media-' + taskId).classList.add('d-none');
+                document.getElementById('media-upload-' + taskId).value = '';
+            }
+        })
+        .catch(error => console.error('Error:', error));
+}
