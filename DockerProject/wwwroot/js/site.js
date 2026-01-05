@@ -135,7 +135,7 @@ function ActionsOnJoin(projectid) {
     }).catch(error => console.error("Error:", error));
 }
 
-function InviteUser(projectId, userId){
+function InviteUser(projectId, userId) {
     console.log(projectId);
     console.log(userId);
     let formData = new FormData();
@@ -145,19 +145,20 @@ function InviteUser(projectId, userId){
         '/Projects/InviteUser2Project/',
         {
             method: 'POST',
-            body:formData
+            body: formData
         }
-    ).then (response => {
-        if(response.ok)
+    ).then(response => {
+        if (response.ok)
             return response.json();
         throw Error(response.statusText)
     }).then(data => {
-        if (data.success){
+        if (data.success) {
             console.log(projectId);
             console.log(userId);
         }
     }).catch(error => console.error("Error:", error));
 }
+
 function RespondJoinRequest(projectId, memberId, accepted) {
     let formData = new FormData();
     formData.append('projectId', projectId);
@@ -186,7 +187,7 @@ function RespondJoinRequest(projectId, memberId, accepted) {
             } else if (data.nrAnyPendReqLeft == 1) {
                 const btnShowPendReq = document.getElementById('btn-show-pend-req');
                 btnShowPendReq.innerText = 'request';
-                
+
             }
         }
     }).catch(error => console.error('Eroare:', error));
@@ -246,15 +247,15 @@ function AttachFieldToForm(id, title, color, fromLoad = false) {
     const badgeContainer = document.getElementById('selectedFieldsBadges');
     const badge = document.createElement('div');
     badge.className = 'badge p-2 me-2 mb-2 d-flex align-items-center';
-    
+
     const finalColor = color || '#563d7c';
     badge.style.backgroundColor = finalColor;
-    
+
     const contrast = getContrastColor(finalColor);
     badge.style.color = contrast;
     badge.style.border = '1.8px solid ' + contrast;
-        
-    
+
+
     badge.innerHTML = `
             ${title} 
             <span class="ms-2" style="cursor:pointer; font-weight:bold;" onclick="RemoveField('${id}', this)">&times;</span>
@@ -358,7 +359,7 @@ function ajaxDeleteComment(id) {
     let formData = new FormData();
     formData.append('id', id);
 
-    fetch('/Comments/Delete', { method: 'POST', body: formData })
+    fetch('/Comments/Delete', {method: 'POST', body: formData})
         .then(res => res.json()).then(data => {
         if (data.success) {
             document.getElementById('comment-' + id).remove();
@@ -376,7 +377,7 @@ function ajaxEditComment(event, id) {
     formData.append('id', id);
     formData.append('content', content);
 
-    fetch('/Comments/Edit', { method: 'POST', body: formData })
+    fetch('/Comments/Edit', {method: 'POST', body: formData})
         .then(res => res.json()).then(data => {
         if (data.success) {
             // Update text
@@ -387,4 +388,80 @@ function ajaxEditComment(event, id) {
             alert(data.message);
         }
     }).catch(err => console.error(err));
+}
+
+function ajaxCreateTask(projectId, status) {
+    let formData = new FormData();
+    formData.append('projectId', projectId);
+    formData.append('status', status);
+
+    console.log('am intrat fn');
+    fetch('/ProjectTasks/Create', {
+        method: 'POST',
+        body: formData
+    }).then(response => {
+        if (response.ok) return response.json();
+        throw Error(response.statusText);
+    }).then(data => {
+        if (data.success) {
+            // Find the specific container for this status (e.g., 'task-container-ToDo')
+            const container = document.getElementById('task-container-' + status);
+            if (container) {
+                // Append the new task HTML
+                container.insertAdjacentHTML('beforeend', data.html);
+            }
+        }
+    }).catch(error => console.error("Error creating task:", error));
+}
+
+function ajaxEditTaskTitle(taskId, newTitle) {
+    let formData = new FormData();
+    formData.append('taskId', taskId);
+    formData.append('newTitle', newTitle);
+
+    fetch('/ProjectTasks/EditTitle/', {
+        method: 'POST',
+        body: formData
+    }).then(response => {
+        if (response.ok) return response.json();
+        throw Error(response.statusText);
+    }).then(data => {
+        if (data.success) {
+            toggle(taskId + '-1');
+            toggle(taskId + '-2');
+
+            const textSpan = document.getElementById('task-title-text-' + taskId);
+
+            if (textSpan) {
+                textSpan.innerText = newTitle;
+            }
+        }
+    }).catch(error => console.error(error));
+}
+
+function ajaxEditTaskDescription(taskId, description) {
+    let formData = new FormData();
+    formData.append('taskId', taskId);
+    formData.append('description', description);
+
+    fetch('/ProjectTasks/EditDescription/', {
+        method: 'POST',
+        body: formData
+    }).then(response => {
+        if (response.ok) return response.json();
+        throw Error(response.statusText);
+    }).then(data => {
+        if (data.success) {
+            // Toggle ALL 3 sections
+            toggle(taskId + '-desc-1'); // Hide Textarea
+            toggle(taskId + '-desc-2'); // Show Text
+            toggle(taskId + '-desc-3'); // Hide Save/Cancel Buttons
+
+            // Update the display text
+            const textContainer = document.getElementById('task-desc-text-' + taskId);
+            if (textContainer) {
+                textContainer.innerHTML = description.replace(/\n/g, "<br>");
+            }
+        }
+    }).catch(error => console.error(error));
 }
