@@ -28,41 +28,48 @@ function toggleChildren(commentId) {
 
 function voteComment(commentId, isUpVote) {
     let formData = new FormData();
-
     formData.append('commentId', commentId);
     formData.append('isUpVote', isUpVote);
+
     fetch('/Comments/Vote/', {
         method: 'POST',
         body: formData,
     }).then(response => {
-        if (response.ok)
-            return response.json();
+        if (response.ok) return response.json();
         throw Error(response.statusText);
     }).then(data => {
         if (data.success) {
+            // 1. UPDATE SCORE NUMBER & COLOR
             const scoreElement = document.getElementById('score-' + commentId);
-            if (scoreElement)
+            if (scoreElement) {
                 scoreElement.innerText = data.score;
-            const btnUp = document.getElementById('btn-up-' + commentId);
-            const iconUp = document.getElementById('icon-up-' + commentId);
 
-            if (data.userStatus === 1) { // upvote
-                btnUp.classList.replace('text-muted', 'text-warning');
-                iconUp.classList.replace('bi-caret-up', 'bi-caret-up-fill');
-            } else { // not-upvoted
-                btnUp.classList.replace('text-warning', 'text-muted');
-                iconUp.classList.replace('bi-caret-up-fill', 'bi-caret-up');
+                // Reset colors
+                scoreElement.classList.remove('text-primary', 'text-danger', 'text-muted');
+
+                // Apply color based on number value
+                if (data.score > 0) {
+                    scoreElement.classList.add('text-primary'); // Blue
+                } else if (data.score < 0) {
+                    scoreElement.classList.add('text-danger');  // Red
+                } else {
+                    scoreElement.classList.add('text-muted');
+                }
             }
 
-            const btnDown = document.getElementById('btn-down-' + commentId);
+            // 2. UPDATE ICONS (Outline vs Fill)
+            const iconUp = document.getElementById('icon-up-' + commentId);
             const iconDown = document.getElementById('icon-down-' + commentId);
 
-            if (data.userStatus === -1) { // downvote
-                btnDown.classList.replace('text-muted', 'text-warning');
-                iconDown.classList.replace('bi-caret-down', 'bi-caret-down-fill');
-            } else { // not-downvoted
-                btnDown.classList.replace('text-warning', 'text-muted');
-                iconDown.classList.replace('bi-caret-down-fill', 'bi-caret-down');
+            // Reset both to default (outline) + secondary color
+            iconUp.className = "bi bi-arrow-up-circle text-secondary";
+            iconDown.className = "bi bi-arrow-down-circle text-secondary";
+
+            // Apply Filled state based on userStatus
+            if (data.userStatus === 1) { // User Upvoted
+                iconUp.className = "bi bi-arrow-up-circle-fill text-primary";
+            } else if (data.userStatus === -1) { // User Downvoted
+                iconDown.className = "bi bi-arrow-down-circle-fill text-danger";
             }
         }
     }).catch(error => console.error('Error:', error));
@@ -299,4 +306,85 @@ function CreateAndAttachField() {
             alert("Error creating field");
         }
     }).catch(error => console.error('Error:', error));
+}
+
+// AJAX: Add Comment (Works for both Root and Reply)
+function ajaxAddComment(event, form, toggleId = null) {
+    event.preventDefault();
+    let formData = new FormData(form);
+
+    fetch('/Comments/New', {
+        method: 'POST',
+        body: formData
+    }).then(res => res.json()).then(data => {
+        if (data.success) {
+            form.reset();
+            if (toggleId) toggle(toggleId);
+
+            // Determine where to place the new comment
+            let containerId;
+            if (data.parentId) {
+                containerId = `children-${data.parentId}`;
+            } else if (data.taskParentId) {
+                containerId = `root-comments-task-${data.taskParentId}`;
+            } else {
+                containerId = `root-comments-${data.projectParentId}`;
+            }
+
+            let container = document.getElementById(containerId);
+
+            if (container) {
+                // Remove "No comments" message if exists
+                let noCommentsMsg = container.querySelector('.text-center.text-muted');
+                if (noCommentsMsg) noCommentsMsg.remove();
+
+                container.classList.remove('d-none');
+
+                // INSERT THE SERVER-SIDE RENDERED HTML
+                container.insertAdjacentHTML('afterbegin', data.html);
+
+                // Optional: Re-initialize specific scripts if needed (rarely needed for simple CSS/onclicks)
+            }
+        } else {
+            alert("Error: " + data.message);
+        }
+    }).catch(err => console.error(err));
+}
+
+// AJAX: Delete Comment
+function ajaxDeleteComment(id) {
+    if (!confirm('Are you sure you want to delete this comment?')) return;
+
+    let formData = new FormData();
+    formData.append('id', id);
+
+    fetch('/Comments/Delete', { method: 'POST', body: formData })
+        .then(res => res.json()).then(data => {
+        if (data.success) {
+            document.getElementById('comment-' + id).remove();
+        } else {
+            alert(data.message);
+        }
+    }).catch(err => console.error(err));
+}
+
+// AJAX: Edit Comment
+function ajaxEditComment(event, id) {
+    event.preventDefault();
+    let content = document.getElementById('textarea-edit-' + id).value;
+    let formData = new FormData();
+    formData.append('id', id);
+    formData.append('content', content);
+
+    fetch('/Comments/Edit', { method: 'POST', body: formData })
+        .then(res => res.json()).then(data => {
+        if (data.success) {
+            // Update text
+            document.getElementById('content-' + id).innerText = data.content;
+            // Close edit form using your existing toggle logic
+            toggle('edit-' + id);
+        } else {
+            alert(data.message);
+        }
+    }).catch(err => console.error(err));
 }
