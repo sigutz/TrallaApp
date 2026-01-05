@@ -465,3 +465,91 @@ function ajaxEditTaskDescription(taskId, description) {
         }
     }).catch(error => console.error(error));
 }
+
+function ajaxEditProjectTitle(projectId) {
+    const newTitle = document.getElementById('input-project-title').value;
+    let formData = new FormData();
+    formData.append('projectId', projectId);
+    formData.append('newTitle', newTitle);
+
+    fetch('/Projects/EditTitle/', {
+        method: 'POST',
+        body: formData
+    }).then(response => {
+        if (response.ok) return response.json();
+        throw Error(response.statusText);
+    }).then(data => {
+        if (data.success) {
+            // Update the display text
+            document.getElementById('display-project-title-text').innerText = newTitle;
+            // Toggle back to display view
+            toggle('project-title-edit');
+            toggle('project-title-display');
+        }
+    }).catch(error => console.error(error));
+}
+
+function ajaxEditProjectDescription(projectId) {
+    // Note: If you are using Summernote, you need to get the code from there. 
+    // Assuming standard textarea for inline task-like edit:
+    const description = document.getElementById('input-project-desc').value;
+
+    let formData = new FormData();
+    formData.append('projectId', projectId);
+    formData.append('description', description);
+
+    fetch('/Projects/EditDescription/', {
+        method: 'POST',
+        body: formData
+    }).then(response => {
+        if (response.ok) return response.json();
+        throw Error(response.statusText);
+    }).then(data => {
+        if (data.success) {
+            // Update display (handle newlines if simple text, or HTML if rich)
+            document.getElementById('display-project-desc').innerHTML = description;
+            toggle('project-desc-edit');
+            toggle('project-desc-display');
+        }
+    }).catch(error => console.error(error));
+}
+
+function ajaxUpdateProjectFields(projectId) {
+    // Collect all hidden inputs created by AttachFieldToForm
+    const inputs = document.querySelectorAll('input[name="selectedFieldIds"]');
+    let formData = new FormData();
+    formData.append('projectId', projectId);
+
+    inputs.forEach(input => {
+        formData.append('selectedFieldIds', input.value);
+    });
+
+    fetch('/Projects/UpdateFields/', {
+        method: 'POST',
+        body: formData
+    }).then(response => {
+        if (response.ok) return response.json();
+        throw Error(response.statusText);
+    }).then(data => {
+        if (data.success) {
+            // Rebuild the Display Badges area
+            const displayContainer = document.getElementById('display-project-fields');
+            displayContainer.innerHTML = ''; // Clear current
+
+            data.fields.forEach(field => {
+                const contrast = getContrastColor(field.hexColor);
+                const badge = document.createElement('span');
+                badge.className = 'badge me-1';
+                badge.style.backgroundColor = field.hexColor;
+                badge.style.color = contrast;
+                badge.style.border = '1.8px solid ' + contrast;
+                badge.innerText = field.title;
+                displayContainer.appendChild(badge);
+            });
+
+            // Toggle views
+            toggle('project-fields-edit');
+            toggle('project-fields-display');
+        }
+    }).catch(error => console.error(error));
+}
