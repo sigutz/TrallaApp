@@ -74,13 +74,51 @@
                         }
                     </div>
 
-                    <h4 class="modal-title fw-bold m-0 flex-grow-1">@Model.Name</h4>
+                    <div class="d-flex align-items-center flex-grow-1 me-3" style="min-height: 38px;">
 
-                    <div class="d-flex gap-2">
-                        <a asp-controller="Tasks" asp-action="Edit" asp-route-id="@Model.Id"
-                           class="btn btn-outline-secondary btn-sm rounded-pill">
-                            <i class="bi bi-pencil"></i> Edit
-                        </a>
+                        <div id="to-toggle-@Model.Id-2"
+                             class="d-flex align-items-center w-100 text-dark text-break"
+                             style="font-size: 1.25rem; font-weight: 600; line-height: 1.2;">
+
+                            <span id="task-title-text-@Model.Id" class="me-2">@Model.Name</span>
+
+                            <button onclick="toggle('@Model.Id-1'); toggle('@Model.Id-2')"
+                                    class="btn btn-sm border-0 text-muted p-1"
+                                    title="Edit title"
+                                    style="transition: color 0.2s; line-height: 0;">
+                                <i class="bi bi-pencil fs-6"></i>
+                            </button>
+                        </div>
+
+                        <div id="to-toggle-@Model.Id-1" class="d-none w-100">
+                            <div class="input-group">
+                                <input type="text"
+                                       id="new-task-title-input-@Model.Id"
+                                       value="@Model.Name"
+                                       class="form-control border-secondary border-end-0"
+                                       style="font-size: 1.1rem; font-weight: 500;"
+                                       placeholder="Task name...">
+
+                                <button class="btn btn-outline-secondary border-start-0 border-end-0"
+                                        type="button"
+                                        title="Save"
+                                        onclick="ajaxEditTaskTitle('@Model.Id', document.getElementById('new-task-title-input-@Model.Id').value)">
+                                    <i class="bi bi-check-lg text-success"></i>
+                                </button>
+
+                                <button class="btn btn-outline-secondary border-start-0"
+                                        type="button"
+                                        title="Cancel"
+                                        onclick="toggle('@Model.Id-1'); toggle('@Model.Id-2')">
+                                    <i class="bi bi-x-lg text-muted"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="d-flex gap-2 align-items-center">
+
                         <button type="button" class="btn-close" id="btn-close-task-modal-@Model.Id"
                                 aria-label="Close"></button>
                     </div>
@@ -94,17 +132,58 @@
                         <div class="col-lg-8 col-md-7 p-4 bg-white" style="border-right: 1px solid #eee;">
 
                             <div class="mb-4">
-                                <h6 class="text-uppercase text-muted small fw-bold mb-2">Description</h6>
-                                <div class="p-3 bg-light rounded text-dark" style="min-height: 100px;">
-                                    @if (!string.IsNullOrEmpty(Model.Description))
-                                    {
-                                        @Html.Raw(Model.Description.Replace("\n", "<br>"))
-                                    }
-                                    else
-                                    {
-                                        <span
-                                            class="text-muted fst-italic">No description provided for this task.</span>
-                                    }
+                                <div class="d-flex justify-content-between align-items-center mb-2"
+                                     style="min-height: 24px;">
+                                    <h6 class="text-uppercase text-muted small fw-bold m-0">Description</h6>
+
+                                    <div id="to-toggle-@Model.Id-desc-3" class="d-none gap-2">
+                                        <button
+                                            class="btn btn-sm btn-outline-success py-0 px-2"
+                                            style="font-size: 0.75rem; font-weight: 600;"
+                                            onclick="ajaxEditTaskDescription('@Model.Id', document.getElementById('new-task-desc-input-@Model.Id').value)">
+                                            Save
+                                        </button>
+
+                                        <button
+                                            class="btn btn-sm btn-outline-secondary py-0 px-2"
+                                            style="font-size: 0.75rem; font-weight: 600;"
+                                            onclick="toggle('@Model.Id-desc-1'); toggle('@Model.Id-desc-2'); toggle('@Model.Id-desc-3')">
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div id="to-toggle-@Model.Id-desc-2"
+                                     class="p-3 bg-light rounded text-dark position-relative"
+                                     style="min-height: 100px;">
+
+                                    <div id="task-desc-text-@Model.Id">
+                                        @if (!string.IsNullOrEmpty(Model.Description))
+                                        {
+                                            @Html.Raw(Model.Description.Replace("\n", "<br>"))
+                                        }
+                                        else
+                                        {
+                                            <span
+                                                class="text-muted fst-italic">No description provided for this task.</span>
+                                        }
+                                    </div>
+
+                                    <button
+                                        onclick="toggle('@Model.Id-desc-1'); toggle('@Model.Id-desc-2'); toggle('@Model.Id-desc-3')"
+                                        class="btn btn-sm border-0 text-muted p-1 position-absolute top-0 end-0 m-2"
+                                        title="Edit description"
+                                        style="transition: color 0.2s;">
+                                        <i class="bi bi-pencil fs-6"></i>
+                                    </button>
+                                </div>
+
+                                <div id="to-toggle-@Model.Id-desc-1" class="d-none w-100">
+                                    <textarea id="new-task-desc-input-@Model.Id"
+                                              class="form-control border-secondary"
+                                              rows="4"
+                                              style="font-size: 0.95rem;"
+                                              placeholder="Task description...">@Model.Description</textarea>
                                 </div>
                             </div>
 
