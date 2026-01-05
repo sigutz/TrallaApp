@@ -95,6 +95,8 @@ public class ProjectsController(
             .ThenInclude(t => t.Users)
             .Include(p => p.Tasks)
             .ThenInclude(t => t.Tags)
+            .Include(p => p.Tasks)
+            .ThenInclude(t => t.Comments)
             .Include(p => p.Comments)
             .ThenInclude(c => c.Author)
             .Include(p => p.Comments)

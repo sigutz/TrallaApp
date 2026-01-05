@@ -3,6 +3,10 @@ using DockerProject.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ViewEngines;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using Microsoft.EntityFrameworkCore;
 
 namespace DockerProject.Controllers;
 
@@ -10,34 +14,74 @@ public class CommentsController : Controller
 {
     private readonly ApplicationDbContext _db;
     private readonly UserManager<ApplicationUser> _userManager;
-    private readonly RoleManager<IdentityRole> _roleManager;
+    private readonly ICompositeViewEngine _viewEngine; 
+    private readonly ITempDataProvider _tempDataProvider;
 
-    public CommentsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager,
-        RoleManager<IdentityRole> roleManager)
+    public CommentsController(
+        ApplicationDbContext context, 
+        UserManager<ApplicationUser> userManager,
+        ICompositeViewEngine viewEngine,
+        ITempDataProvider tempDataProvider)
     {
         _db = context;
         _userManager = userManager;
-        _roleManager = roleManager;
+        _viewEngine = viewEngine;
+        _tempDataProvider = tempDataProvider;
     }
 
     [HttpPost]
     [Authorize]
-    public IActionResult New(Comment comment)
+    public async Task<IActionResult> New(Comment comment)
     {
-        comment.Date = DateTime.Now;
-        comment.AuthorId = _userManager.GetUserId(User);
-
         try
         {
+            comment.Date = DateTime.Now;
+            var user = await _userManager.GetUserAsync(User);
+            comment.AuthorId = user.Id;
+        
             _db.Comments.Add(comment);
-            _db.SaveChanges();
-            return Redirect($"/Projects/Show/{comment.ProjectParentId}");
+            await _db.SaveChangesAsync();
+
+            // Reload to include Author details for the View
+            var commentForView = _db.Comments
+                .Include(c => c.Author)
+                .Include(c => c.Votes)
+                .FirstOrDefault(c => c.Id == comment.Id);
+
+            // Pass FounderId so "OP" badge works in the partial
+            // Handles both Project Comments and Task Comments
+            string? founderId = null;
+            if (comment.ProjectParentId != null)
+            {
+                 var p = _db.Projects.Find(comment.ProjectParentId);
+                 founderId = p?.FounderId;
+            }
+            else if (comment.TaskParentId != null) // If checking task parent
+            {
+                // You need to traverse Task -> Project to get founder
+                // Assumes TaskParent is loaded or you query it:
+                var t = _db.Tasks.Include(t => t.ProjectParent).FirstOrDefault(t => t.Id == comment.TaskParentId);
+                founderId = t?.ProjectParent?.FounderId;
+            }
+            
+            ViewData["ProjectFounderId"] = founderId;
+
+            // Render Partial to String
+            // Make sure the path is correct. If _CommentThread is in Views/Comments/ use this:
+            string htmlString = await RenderViewAsync("~/Views/Comments/_CommentThread.cshtml", commentForView, true);
+
+            return Json(new
+            {
+                success = true,
+                html = htmlString,
+                parentId = comment.CommentParentId,
+                taskParentId = comment.TaskParentId,
+                projectParentId = comment.ProjectParentId
+            });
         }
         catch (Exception e)
         {
-            TempData["message"] = e.Message;
-            TempData["messageType"] = "alert-danger";
-            return Redirect("/Projects/Index");
+            return Json(new { success = false, message = e.Message });
         }
     }
 
@@ -46,97 +90,110 @@ public class CommentsController : Controller
     public IActionResult Delete(string id)
     {
         Comment? comment = _db.Comments.Find(id);
-        if (comment is null)
-            return NotFound();
+        if (comment == null) return Json(new { success = false, message = "Not found" });
 
         if (comment.AuthorId == _userManager.GetUserId(User) || User.IsInRole("Admin"))
         {
             _db.Comments.Remove(comment);
             _db.SaveChanges();
+            return Json(new { success = true });
         }
-        else
-        {
-            TempData["message"] = "Nu aveti dreptul sa stergeti comentariul";
-            TempData["messageType"] = "alert-danger";
-        }
-
-        return Redirect($"/Projects/Show/{comment.ProjectParentId}");
-    }
-
-    [Authorize]
-    public IActionResult Edit(string id)
-    {
-        Comment? comment = _db.Comments.Find(id);
-        if (comment is null)
-            return NotFound();
-
-        if (comment.AuthorId == _userManager.GetUserId(User) || User.IsInRole("Admin"))
-        {
-            return View(comment);
-        }
-        else
-        {
-            TempData["message"] = "Nu aveti dreptul sa editati comentariul";
-            TempData["messageType"] = "alert-danger";
-            return Redirect($"/Projects/Show/{comment.ProjectParentId}");
-        }
+        return Json(new { success = false, message = "Unauthorized" });
     }
 
     [HttpPost]
     [Authorize]
-    public IActionResult Vote(string commentId, bool isUpvote) // 1. Fixed parameter name to match View
+    public IActionResult Edit(string id, string content)
+    {
+        Comment? comment = _db.Comments.Find(id);
+        if (comment == null) return Json(new { success = false, message = "Not found" });
+
+        if (comment.AuthorId == _userManager.GetUserId(User) || User.IsInRole("Admin"))
+        {
+            comment.Content = content;
+            comment.IsEdited = true;
+            _db.Comments.Update(comment);
+            _db.SaveChanges();
+            return Json(new { success = true, content = comment.Content });
+        }
+        return Json(new { success = false, message = "Unauthorized" });
+    }
+
+    [HttpPost]
+    [Authorize]
+    public IActionResult Vote(string commentId, bool isUpvote)
     {
         var currentUserId = _userManager.GetUserId(User);
         Comment? comment = _db.Comments.Find(commentId);
 
-        if (comment is null)
-        {
-            return NotFound();
-        }
+        if (comment is null) return NotFound();
 
-        // verificam daca exista deja un vot in t.a.
-        var existingVote = _db.CommentsVotes
-            .FirstOrDefault(v => v.CommentId == commentId && v.UserId == currentUserId);
+        var existingVote = _db.CommentsVotes.FirstOrDefault(v => v.CommentId == commentId && v.UserId == currentUserId);
 
-        if (existingVote != null) // cazul in care e deja in baza de date
+        if (existingVote != null)
         {
-            
-            if (existingVote.IsUpvote == isUpvote) // verificam daca si a luat votul
-            {
-                _db.CommentsVotes.Remove(existingVote);
-            }
-            else // daca nu schimbam votul
+            if (existingVote.IsUpvote == isUpvote) _db.CommentsVotes.Remove(existingVote);
+            else
             {
                 existingVote.IsUpvote = isUpvote;
                 _db.CommentsVotes.Update(existingVote);
             }
         }
-        else // cazul in care nu este votul in baza de date (il adaugam);
+        else
         {
-            CommentVote vote = new CommentVote
-            {
-                CommentId = comment.Id,
-                UserId = currentUserId,
-                IsUpvote = isUpvote
-            };
+            CommentVote vote = new CommentVote { CommentId = comment.Id, UserId = currentUserId, IsUpvote = isUpvote };
             _db.CommentsVotes.Add(vote);
         }
 
         _db.SaveChanges();
         
         var upVote = _db.CommentsVotes.Count(v => v.CommentId == commentId && v.IsUpvote);
-        var downVote = _db.CommentsVotes.Count(v => v.CommentId == commentId && v.IsUpvote == false);
-        var newScore = upVote - downVote;
-
-        // 0 -> None, 1 -> Up, -1 -> Down
+        var downVote = _db.CommentsVotes.Count(v => v.CommentId == commentId && !v.IsUpvote);
+        
         int userStatus = 0;
         var currentVote = _db.CommentsVotes.FirstOrDefault(v => v.CommentId == commentId && v.UserId == currentUserId);
-        if (currentVote != null)
+        if (currentVote != null) userStatus = currentVote.IsUpvote ? 1 : -1;
+        
+        return Json(new {success = true, score = (upVote - downVote), UserStatus = userStatus});
+    }
+
+    // --- THIS IS THE MISSING FUNCTION ---
+    private async Task<string> RenderViewAsync<TModel>(string viewName, TModel model, bool partial = false)
+    {
+        if (string.IsNullOrEmpty(viewName))
         {
-            userStatus = currentVote.IsUpvote ? 1 : -1;
+            viewName = ControllerContext.ActionDescriptor.ActionName;
         }
-        
-        
-        return Json(new {success = true, score = newScore, UserStatus = userStatus});
+
+        ViewData.Model = model;
+
+        using (var writer = new StringWriter())
+        {
+            IViewEngine viewEngine = _viewEngine;
+            ViewEngineResult viewResult = viewEngine.FindView(ControllerContext, viewName, !partial);
+
+            if (viewResult.Success == false)
+            {
+                // Fallback: try to find it as a path if the name check failed
+                viewResult = viewEngine.GetView(null, viewName, !partial);
+            }
+
+            if (viewResult.Success == false)
+            {
+                return $"A view with the name {viewName} could not be found";
+            }
+
+            ViewContext viewContext = new ViewContext(
+                ControllerContext,
+                viewResult.View,
+                ViewData,
+                TempData,
+                writer,
+                new HtmlHelperOptions()
+            );
+
+            await viewResult.View.RenderAsync(viewContext);
+            return writer.GetStringBuilder().ToString();
+        }
     }
 }

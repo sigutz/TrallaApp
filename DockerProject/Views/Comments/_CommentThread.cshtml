@@ -2,126 +2,111 @@
 @using Microsoft.AspNetCore.Identity
 @inject UserManager<ApplicationUser> UserManager
 @{
-    ViewBag.ChildrenCommentsOpen = true;
     var currentUserId = UserManager.GetUserId(User);
     var projectFounderId = ViewData["ProjectFounderId"] as string;
+    
+    var authorName = Model.Author?.UserName ?? "Anonymous";
+    var authorInitial = authorName.Length > 0 ? authorName.Substring(0, 1).ToUpper() : "?";
+    
     var isProjectOwner = !string.IsNullOrEmpty(currentUserId) && currentUserId == projectFounderId;
     var isCommentAuthor = !string.IsNullOrEmpty(currentUserId) && currentUserId == Model.AuthorId;
-    var isAdmin = User.IsInRole("Admin");
-    var canEdit = isAdmin || isProjectOwner || isCommentAuthor;
+    var canEdit = User.IsInRole("Admin") || isProjectOwner || isCommentAuthor;
 
+    // Vote Logic
     var userVote = Model.Votes.FirstOrDefault(v => v.UserId == currentUserId);
+    var voteCount = Model.Votes.Count(v => v.IsUpvote) - Model.Votes.Count(v => !v.IsUpvote);
+    
+    var isUpvoted = userVote != null && userVote.IsUpvote;
+    var isDownvoted = userVote != null && !userVote.IsUpvote;
 
-    var iconVoteUp = userVote != null && userVote.IsUpvote ? "bi-caret-up-fill" : "bi-caret-up";
-    var iconVoteDown = userVote != null && !userVote.IsUpvote ? "bi-caret-down-fill" : "bi-caret-down";
+    // Requirement: Colors only on the number (Blue positive, Red negative)
+    var scoreClass = voteCount > 0 ? "text-primary" : (voteCount < 0 ? "text-danger" : "text-muted");
 
-    var textClassUp = userVote != null && userVote.IsUpvote ? "text-warning" : "text-muted";
-    var textClassDown = userVote != null && !userVote.IsUpvote ? "text-warning" : "text-muted";
+    // Requirement: Icons go from default to fill
+    var upIconClass = isUpvoted ? "bi-arrow-up-circle-fill text-primary" : "bi-arrow-up-circle text-secondary";
+    var downIconClass = isDownvoted ? "bi-arrow-down-circle-fill text-danger" : "bi-arrow-down-circle text-secondary";
 }
-<div class="ms-4 border-start ps-3 mt-3" id="comment-@Model.Id">
-    <div class="d-flex gap-2 ">
 
-        <div class="d-flex flex-column text-center">
+<div class="d-flex gap-3 mt-3" id="comment-@Model.Id">
+    
+    <div class="d-flex flex-column align-items-center">
+        <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center flex-shrink-0 shadow-sm" 
+             style="width: 32px; height: 32px; font-size: 0.85rem; font-weight: 600;">
+            @authorInitial
+        </div>
+        <div class="flex-grow-1 border-start border-2 mt-2" 
+             style="border-color: #e9ecef; cursor: pointer;" 
+             onclick="toggleChildren('@Model.Id')"></div>
+    </div>
 
-            @* UPVOTE FORM *@
-            <button onclick="voteComment('@Model.Id', true)" 
-                    id="btn-up-@Model.Id"
-                    class="btn btn-link p-0 text-decoration-none border-0 @textClassUp">
-                <i id="icon-up-@Model.Id" class="bi @iconVoteUp fs-5"></i>
-            </button>
-
-            @* SCORE *@
-            <small id="score-@Model.Id" class="fw-bold">
-                @(Model.Votes.Count(v => v.IsUpvote) - Model.Votes.Count(v => !v.IsUpvote))
-            </small>
-
-            @* DOWNVOTE FORM *@
-            <button onclick="voteComment('@Model.Id', false)" 
-                    id="btn-down-@Model.Id"
-                    class="btn btn-link p-0 text-decoration-none border-0 @textClassDown">
-                <i id="icon-down-@Model.Id" class="bi @iconVoteDown fs-5"></i>
-            </button>
-
+    <div class="flex-grow-1 pb-2">
+        
+        <div class="d-flex align-items-center gap-2 mb-1">
+            <span class="fw-bold text-dark" style="font-size: 0.9rem;">@authorName</span>
+            @if(isProjectOwner) { <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill" style="font-size: 0.65rem;">OP</span> }
+            <span class="text-muted small" style="font-size: 0.75rem;">• @Model.Date.ToString("MMM dd, HH:mm")</span>
         </div>
 
+        <div id="content-@Model.Id" class="text-dark mb-2" style="font-size: 0.95rem;">
+            @Model.Content
+        </div>
 
-        <div class="flex-grow-1">
+        <div id="to-toggle-edit-@Model.Id" class="d-none mb-2">
+            <form onsubmit="ajaxEditComment(event, '@Model.Id')">
+                <textarea id="textarea-edit-@Model.Id" class="form-control mb-2" rows="2">@Model.Content</textarea>
+                <button type="submit" class="btn btn-sm btn-success">Save</button>
+                <button type="button" class="btn btn-sm btn-light" onclick="toggle('edit-@Model.Id')">Cancel</button>
+            </form>
+        </div>
 
-            @* DETALII CREARE *@
-            <div class="d-flex justify-content-between align-items-center">
-                <span class="fw-bold small">@(Model.Author?.UserName ?? "Anonymous")</span>
-                <span class="text-muted extra-small">@Model.Date.ToString("g")</span>
+        <div class="d-flex align-items-center gap-3">
+            <div class="d-flex align-items-center bg-light rounded-pill border px-1">
+                @* Upvote Button *@
+                <button onclick="voteComment('@Model.Id', true)" class="btn btn-sm btn-link text-decoration-none border-0 py-0 px-2">
+                    <i id="icon-up-@Model.Id" class="bi @upIconClass"></i>
+                </button>
+                
+                @* Score Number *@
+                <span id="score-@Model.Id" class="fw-bold small mx-1 @scoreClass">@voteCount</span>
+                
+                @* Downvote Button *@
+                <button onclick="voteComment('@Model.Id', false)" class="btn btn-sm btn-link text-decoration-none border-0 py-0 px-2">
+                    <i id="icon-down-@Model.Id" class="bi @downIconClass"></i>
+                </button>
             </div>
 
-            @* CONTINUT *@
-            <p class="mb-1 text-dark">@Model.Content</p>
+            <button class="btn btn-sm btn-link text-decoration-none text-muted p-0" onclick="toggle('@Model.Id')">
+                <i class="bi bi-chat"></i> Reply
+            </button>
 
-            @* ACTIUNI *@
-            <div class="d-flex justify-content-between">
-
-                <div> @* REPLY *@
-                    <div class="mb-2">
-
-                        <button class="btn btn-link btn-sm p-0 text-decoration-none text-muted"
-                                onclick="toggleChildren('@Model.Id')"> @* SHOW/HIDE COMENTARII COPIL *@
-                            <i id="icon-@Model.Id" class="bi bi-folder-minus fs-6"></i>
-                        </button>
-
-                        <button class="btn btn-link btn-sm p-0 text-decoration-none text-muted"
-                                onclick="toggle('@Model.Id')"> @* SHOW/HIDE REPLY *@
-                            <i class="bi bi-reply"></i> Reply
-                        </button>
-
-                    </div>
+            @if (canEdit)
+            {
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-link text-muted p-0" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></button>
+                    <ul class="dropdown-menu border-0 shadow-sm">
+                        <li><button class="dropdown-item small" onclick="toggle('edit-@Model.Id')"><i class="bi bi-pencil me-2"></i>Edit</button></li>
+                        <li><button class="dropdown-item small text-danger" onclick="ajaxDeleteComment('@Model.Id')"><i class="bi bi-trash me-2"></i>Delete</button></li>
+                    </ul>
                 </div>
+            }
+        </div>
 
-                <div> @* ADMINISTRARE *@
-                    @if (canEdit)
-                    {
-                        <a asp-controller="Comments" asp-action="Edit" asp-route-id="@Model.Id"
-                           class="btn btn-outline-warning btn-sm border-0"><i class="bi bi-pencil fs-6"></i></a>
+        <div id="to-toggle-@Model.Id" class="d-none mt-3">
+            <form onsubmit="ajaxAddComment(event, this, '@Model.Id')">
+                <input type="hidden" name="ProjectParentId" value="@Model.ProjectParentId"/>
+                <input type="hidden" name="CommentParentId" value="@Model.Id"/>
+                <textarea name="Content" class="form-control mb-2" rows="2" placeholder="Write a reply..."></textarea>
+                <button type="submit" class="btn btn-sm btn-primary">Reply</button>
+                <button type="button" class="btn btn-sm btn-light" onclick="toggle('@Model.Id')">Cancel</button>
+            </form>
+        </div>
 
-                        <form asp-controller="Comments" asp-action="Delete" asp-route-id="@Model.Id" method="post"
-                              class="d-inline">
-                            <input type="hidden" name="commentid" value="@Model.Id"/>
-
-                            <button type="submit" class="btn btn-outline-danger btn-sm border-0"
-                                    onclick="return confirm('Are you sure you want to delete this project?');">
-                                <i class="bi bi-trash fs-6"></i>
-                            </button>
-                        </form>
-                    }
-                </div>
-            </div>
-
-            @* FORMULAR REPLY *@
-            <div id="to-toggle-@Model.Id" class="d-none mb-3">
-                <form asp-controller="Comments" asp-action="New" method="post">
-                    <input type="hidden" name="ProjectParentId" value="@Model.ProjectParentId"/>
-                    <input type="hidden" name="CommentParentId" value="@Model.Id"/>
-                    <textarea name="Content" class="form-control form-control-sm mb-2" rows="2"
-                              placeholder="Write a reply..."></textarea>
-                    <button type="submit" class="btn btn-primary btn-sm">Submit</button>
-                    <button type="button" class="btn btn-light btn-sm" onclick="toggle('@Model.Id')">Cancel
-                    </button>
-                </form>
-            </div>
-
-            @* RECURSIVITATE COMENTARII COPIL*@
-            <div id="children-@Model.Id" class="d-block mb-3">
-                @if (Model.ProjectParent?.Comments != null)
-                {
-                    var replies = Model.ProjectParent.Comments
-                        .Where(c => c.CommentParentId == Model.Id)
-                        .OrderByDescending(c => c.Date);
-                    
-                    foreach (var reply in replies)
-                    {
-                        <partial name="~/Views/Comments/_CommentThread.cshtml" model="reply"/>
-                    }
-                }
-            </div>
-
+        <div id="children-@Model.Id" class="mt-3">
+            @if (Model.ProjectParent?.Comments != null)
+            {
+                var replies = Model.ProjectParent.Comments.Where(c => c.CommentParentId == Model.Id).OrderByDescending(c => c.Date);
+                foreach (var reply in replies) { <partial name="~/Views/Comments/_CommentThread.cshtml" model="reply"/> }
+            }
         </div>
     </div>
 </div>

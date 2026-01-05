@@ -287,42 +287,39 @@
 
                         // selectam toate comentariile fara comentariu parinte
                         var topLevelComments = Model.Comments?
-                            .Where(c => c.CommentParentId == null)
+                            .Where(c => c.CommentParentId == null && c.TaskParentId == null)
                             .OrderByDescending(c => c.Date);
                     }
 
-                    @if (topLevelComments != null && topLevelComments.Any())
-                    {
-                        @foreach (var comment in topLevelComments)
+                    <div id="root-comments-@Model.Id">
+                        @if (topLevelComments != null && topLevelComments.Any())
                         {
-                            // Il trimitem in partial pentru afisarea sa si afisaarea recursiva a copiilor
-                            <partial name="~/Views/Comments/_CommentThread.cshtml" model="comment"/>
+                            foreach (var comment in topLevelComments)
+                            {
+                                <partial name="~/Views/Comments/_CommentThread.cshtml" model="comment"/>
+                            }
                         }
-                    }
-                    else
-                    {
-                        <p class="text-muted">No comments yet. Be the first to say something!</p>
-                    }
+                        else
+                        {
+                            <p class="text-muted text-center py-3">No comments yet.</p>
+                        }
+                    </div>
 
                     @if (SignInManager.IsSignedIn(User))
                     {
-                        <hr/>
-                        <form asp-controller="Comments" asp-action="New" method="post">
-                            <input type="hidden" name="ProjectParentId" value="@Model.Id"/>
-                            <div class="form-group mb-3">
-                                <label class="form-label text-muted">Add a comment:</label>
-                                <textarea name="Content" class="form-control" rows="3" required></textarea>
+                        <hr />
+                        <div class="d-flex gap-3">
+                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width: 38px; height: 38px;">
+                                @UserManager.GetUserName(User)?.Substring(0, 1).ToUpper()
                             </div>
-
-                            <button type="submit" class="btn btn-primary btn-sm">Post Comment</button>
-                        </form>
-                    }
-                    else
-                    {
-                        <hr/>
-                        <p class="text-muted small">
-                            <a asp-area="Identity" asp-page="/Account/Login">Login</a> to leave a comment.
-                        </p>
+                            <div class="flex-grow-1">
+                                <form onsubmit="ajaxAddComment(event, this, null)">
+                                    <input type="hidden" name="ProjectParentId" value="@Model.Id"/>
+                                    <textarea name="Content" class="form-control mb-2" rows="2" placeholder="Add a comment..." required></textarea>
+                                    <button type="submit" class="btn btn-primary btn-sm rounded-pill px-3">Post Comment</button>
+                                </form>
+                            </div>
+                        </div>
                     }
                 </div>
             </div>
