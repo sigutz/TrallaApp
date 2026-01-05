@@ -402,4 +402,73 @@ public class ProjectsController(
         return Json(new { success = true });
     }
     
+    
+    [Authorize]
+    [HttpPost]
+    public async Task<IActionResult> EditTitle(string projectId, string newTitle)
+    {
+        var project = await _db.Projects.FirstOrDefaultAsync(p => p.Id == projectId);
+        
+        if (project == null) return NotFound();
+        
+        if (project.FounderId != _userManager.GetUserId(User) && !User.IsInRole("Admin"))
+            return Forbid();
+        
+        project.Title = newTitle;
+        await _db.SaveChangesAsync();
+        
+        return Json(new { success = true });
+    }
+
+    [Authorize]
+    [HttpPost]
+    public async Task<IActionResult> EditDescription(string projectId, string description)
+    {
+        var project = await _db.Projects.FirstOrDefaultAsync(p => p.Id == projectId);
+        
+        if (project == null) return NotFound();
+
+        if (project.FounderId != _userManager.GetUserId(User) && !User.IsInRole("Admin"))
+            return Forbid();
+        
+        project.Description = description;
+        await _db.SaveChangesAsync();
+        
+        return Json(new { success = true });
+    }
+
+    [Authorize]
+    [HttpPost]
+    public async Task<IActionResult> UpdateFields(string projectId, string[] selectedFieldIds)
+    {
+        var project = await _db.Projects
+            .Include(p => p.Fields)
+            .FirstOrDefaultAsync(p => p.Id == projectId);
+
+        if (project == null) return NotFound();
+
+        if (project.FounderId != _userManager.GetUserId(User) && !User.IsInRole("Admin"))
+            return Forbid();
+
+        project.Fields.Clear();
+
+        if (selectedFieldIds != null && selectedFieldIds.Length > 0)
+        {
+            var fieldsToAdd = _db.Fields
+                .Where(f => selectedFieldIds.Contains(f.Id))
+                .ToList();
+
+            foreach (var field in fieldsToAdd)
+            {
+                project.Fields.Add(field);
+            }
+        }
+
+        await _db.SaveChangesAsync();
+        
+        var newFieldsData = project.Fields.Select(f => new { f.Title, f.HexColor }).ToList();
+
+        return Json(new { success = true, fields = newFieldsData });
+    }
+    
 }
