@@ -356,22 +356,38 @@
                                 </div>
 
                                 <div class="col-md-6">
-                                    <h6 class="text-uppercase text-muted small fw-bold mb-2">Assigned To</h6>
-                                    <div class="d-flex gap-1 flex-wrap">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <div>
+                                            <h6 class="text-uppercase text-muted small fw-bold m-0">Assigned To</h6>
+                                        </div>
+                                        <partial name="_AssignTaskToUser.cshtml" model="@Model"/>
+                                    </div>
+
+                                    <div class="d-flex gap-1 flex-column" id="assigned-users-container-@Model.Id">
                                         @if (Model.Users.Any())
                                         {
                                             foreach (var user in Model.Users)
                                             {
-                                                <div
-                                                    class="d-flex align-items-center bg-light rounded-pill pe-2 ps-1 py-1 border">
-                                                    <i class="bi bi-person-circle fs-6 me-1 text-secondary"></i>
-                                                    <span class="small">@(user.UserName ?? user.Email)</span>
+                                                var displayName = user.UserName ?? user.Email;
+                
+                                                <div class="d-flex align-items-center justify-content-between mb-2" 
+                                                     id="assigned-user-row-@Model.Id-@user.Id">
+                                                    <div>
+                                                        <i class="bi bi-person-circle fs-6 me-1 text-secondary"></i>
+                                                        <span class="small">@displayName</span>
+                                                    </div>
+                                                    <div>
+                                                        <button class="btn btn-sm btn-outline-danger" 
+                                                                onclick="ajaxAsignOrRemoveUserFromTask('@user.Id', '@Model.Id', '@displayName')">
+                                                            Remove
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             }
                                         }
                                         else
                                         {
-                                            <span class="small text-muted">Unassigned</span>
+                                            <span class="small text-muted" id="unassigned-msg-@Model.Id">Unassigned</span>
                                         }
                                     </div>
                                 </div>
