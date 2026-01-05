@@ -250,4 +250,84 @@ public class ProjectTasksController : Controller
             return writer.GetStringBuilder().ToString();
         }
     }
+    
+    [Authorize]
+[HttpPost]
+public async Task<IActionResult> UploadMedia(string taskId, IFormFile mediaFile)
+{
+    var task = await _db.Tasks
+        .Include(t => t.ProjectParent)
+        .FirstOrDefaultAsync(t => t.Id == taskId);
+
+    if (task == null) return NotFound();
+
+    // Check permissions (Founder or Admin only for uploading)
+    if (task.ProjectParent.FounderId != _userManager.GetUserId(User) && !User.IsInRole("Admin"))
+        return Forbid();
+
+    if (mediaFile != null && mediaFile.Length > 0)
+    {
+        // 1. Create the path to wwwroot/media
+        var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "media");
+        if (!Directory.Exists(uploadsFolder))
+        {
+            Directory.CreateDirectory(uploadsFolder);
+        }
+
+        // 2. Generate unique filename
+        var uniqueFileName = Guid.NewGuid().ToString() + "_" + mediaFile.FileName;
+        var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+        // 3. Save file to server
+        using (var fileStream = new FileStream(filePath, FileMode.Create))
+        {
+            await mediaFile.CopyToAsync(fileStream);
+        }
+
+        // 4. Delete old file if it exists (cleanup)
+        if (!string.IsNullOrEmpty(task.MediaUrl))
+        {
+            var oldPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", task.MediaUrl.TrimStart('/'));
+            if (System.IO.File.Exists(oldPath))
+            {
+                System.IO.File.Delete(oldPath);
+            }
+        }
+
+        // 5. Update Database
+        task.MediaUrl = "/media/" + uniqueFileName;
+        await _db.SaveChangesAsync();
+        
+        return Json(new { success = true, url = task.MediaUrl });
+    }
+
+    return Json(new { success = false, message = "No file selected" });
+}
+
+[Authorize]
+[HttpPost]
+public async Task<IActionResult> DeleteMedia(string taskId)
+{
+    var task = await _db.Tasks.Include(t => t.ProjectParent).FirstOrDefaultAsync(t => t.Id == taskId);
+    if (task == null) return NotFound();
+
+    if (task.ProjectParent.FounderId != _userManager.GetUserId(User) && !User.IsInRole("Admin"))
+        return Forbid();
+
+    if (!string.IsNullOrEmpty(task.MediaUrl))
+    {
+        // Delete physical file
+        var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", task.MediaUrl.TrimStart('/'));
+        if (System.IO.File.Exists(filePath))
+        {
+            System.IO.File.Delete(filePath);
+        }
+        
+        task.MediaUrl = null;
+        await _db.SaveChangesAsync();
+        return Json(new { success = true });
+    }
+    
+    return Json(new { success = false });
+}
 }

@@ -1,0 +1,181 @@
+﻿@using DockerProject.Data
+@model DockerProject.Models.ProjectTask 
+
+@inject ApplicationDbContext _context
+
+@{
+    var allTags = _context.Tags.Where(t => Model.Tags.Contains(t) == false);
+    var uniqueModalId = "tagModal-" + Model.Id;
+}
+
+<button type="button" class="btn btn-sm btn-outline-secondary rounded-circle"
+        style="width: 24px; height: 24px; padding: 0;"
+        onclick="$('#@uniqueModalId').modal('show')">
+    <i class="bi bi-plus"></i>
+</button>
+
+<div class="modal fade" id="@uniqueModalId" tabindex="-1" role="dialog" aria-hidden="true" style="z-index: 1060;">
+    <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
+        <div class="modal-content">
+            <div class="modal-header py-2">
+                <h6 class="modal-title">Select Tag</h6>
+                <button type="button" class="btn-close" onclick="$('#@uniqueModalId').modal('hide')"></button>
+            </div>
+            
+            <div class="modal-body">
+                <input type="text" class="form-control form-control-sm mb-3" 
+                       id="searchTag-@Model.Id" 
+                       placeholder="Search tags..." 
+                       autocomplete="off"
+                       onkeyup="filterTags('@Model.Id')"/>
+
+                <div id="tagList-@Model.Id" class="d-flex flex-column gap-1" style="max-height: 200px; overflow-y: auto;">
+                    @foreach (var tag in allTags)
+                    {
+                        <div class="tag-item d-flex justify-content-between align-items-center p-1 border rounded" 
+                             data-name="@tag.Name.ToLower()">
+                            
+                            <span class="badge rounded-pill" 
+                                  style="background-color: @tag.HexColor; color: @Helper.GetContrastColor(tag.HexColor)">
+                                @tag.Name
+                            </span>
+                            
+                            <button type="button" class="btn btn-xs btn-link text-decoration-none"
+                                    onclick="assignTag('@tag.Id', '@Model.Id', '@tag.Name', '@tag.HexColor')">
+                                Select
+                            </button>
+                        </div>
+                    }
+                </div>
+
+                <div id="createTagSection-@Model.Id" class="d-none mt-3 pt-2 border-top">
+                    <p class="small text-muted mb-2">Tag not found. Create new?</p>
+                    <div class="d-flex gap-2">
+                        <input type="color" id="newTagColor-@Model.Id" class="form-control form-control-color form-control-sm" value="#0d6efd">
+                        <input type="text" id="newTagName-@Model.Id" class="form-control form-control-sm" placeholder="Name">
+                    </div>
+                    <button type="button" class="btn btn-primary btn-sm w-100 mt-2" onclick="createAndAssignTag('@Model.Id')">
+                        Create & Add
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function removeTag(tagId, taskId) {
+        if(!confirm('Remove this tag?')) return;
+
+        let formData = new FormData();
+        formData.append('tagId', tagId);
+        formData.append('taskId', taskId);
+
+        fetch('/Tags/Remove', {
+            method: 'POST',
+            body: formData
+        }).then(res => res.json()).then(data => {
+            if(data.success) {
+                // Remove the badge from the UI
+                const badge = document.getElementById('tag-badge-' + tagId);
+                if(badge) badge.remove();
+            }
+        });
+    }
+
+    function assignTag(tagId, taskId, name, color) {
+        if(document.getElementById('tag-badge-' + tagId)) {
+            $('#@uniqueModalId').modal('hide');
+            return;
+        }
+
+        let formData = new FormData();
+        formData.append('tagId', tagId);
+        formData.append('taskId', taskId);
+
+        fetch('/Tags/Assign', {
+            method: 'POST',
+            body: formData
+        }).then(res => res.json()).then(data => {
+            if(data.success) {
+                addTagToUi(taskId, data.id, data.name, data.color);
+                $('#@uniqueModalId').modal('hide');
+            }
+        });
+    }
+
+    function createAndAssignTag(taskId) {
+        var name = document.getElementById('newTagName-' + taskId).value;
+        var color = document.getElementById('newTagColor-' + taskId).value;
+        if(!name) return;
+
+        let formData = new FormData();
+        formData.append('name', name);
+        formData.append('hexColor', color);
+        formData.append('taskId', taskId);
+
+        fetch('/Tags/Create', {
+            method: 'POST',
+            body: formData
+        }).then(res => res.json()).then(data => {
+            if(data.success) {
+                addTagToUi(taskId, data.id, data.name, data.color);
+                $('#@uniqueModalId').modal('hide');
+            }
+        });
+    }
+
+    function addTagToUi(taskId, tagId, name, color) {
+        var btn = document.querySelector(`button[onclick="$('#tagModal-${taskId}').modal('show')"]`);
+        if(btn) {
+            var container = btn.parentElement;
+            
+            // Create the span wrapper
+            var badge = document.createElement('span');
+            badge.className = "badge rounded-pill border d-flex align-items-center gap-1 me-1";
+            badge.id = 'tag-badge-' + tagId;
+            badge.style.backgroundColor = color;
+            badge.style.color = getContrastColor(color);
+            
+            // Inner HTML with the X icon
+            badge.innerHTML = `
+                ${name}
+                <i class="bi bi-x-lg" 
+                   style="cursor: pointer; opacity: 0.6;" 
+                   onmouseover="this.style.opacity=1" 
+                   onmouseout="this.style.opacity=0.6"
+                   onclick="removeTag('${tagId}', '${taskId}')"></i>
+            `;
+            
+            container.insertBefore(badge, btn);
+        }
+    }
+
+    function filterTags(taskId) {
+        var input = document.getElementById('searchTag-' + taskId);
+        var filter = input.value.toLowerCase();
+        var list = document.getElementById('tagList-' + taskId);
+        var items = list.getElementsByClassName('tag-item');
+        var createSection = document.getElementById('createTagSection-' + taskId);
+        var hasMatch = false;
+
+        for (var i = 0; i < items.length; i++) {
+            var name = items[i].getAttribute('data-name');
+            if (name.indexOf(filter) > -1) {
+                items[i].classList.remove('d-none');
+                items[i].classList.add('d-flex');
+                hasMatch = true;
+            } else {
+                items[i].classList.add('d-none');
+                items[i].classList.remove('d-flex');
+            }
+        }
+
+        if (!hasMatch && filter !== "") {
+            createSection.classList.remove('d-none');
+            document.getElementById('newTagName-' + taskId).value = input.value;
+        } else {
+            createSection.classList.add('d-none');
+        }
+    }
+</script>
