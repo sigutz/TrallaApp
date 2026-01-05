@@ -18,7 +18,7 @@ public class ProjectTasksController : Controller
     private readonly ITempDataProvider _tempDataProvider;
 
     public ProjectTasksController(
-        ApplicationDbContext context, 
+        ApplicationDbContext context,
         UserManager<ApplicationUser> userManager,
         ICompositeViewEngine viewEngine,
         ITempDataProvider tempDataProvider)
@@ -35,13 +35,13 @@ public class ProjectTasksController : Controller
     public async Task<IActionResult> Create(string projectId, TaskStatusEnum status)
     {
         var project = await _db.Projects.FindAsync(projectId);
-        
+
         if (project == null) return NotFound();
-        
+
         // Check permissions
         if (project.FounderId != _userManager.GetUserId(User) && !User.IsInRole("Admin"))
             return Forbid();
-        
+
         // Create Blank Task
         var task = new ProjectTask
         {
@@ -52,7 +52,7 @@ public class ProjectTasksController : Controller
             AssignedDate = DateTime.Now,
             Status = status // Set the status based on which button was clicked
         };
-        
+
         _db.Tasks.Add(task);
         await _db.SaveChangesAsync();
 
@@ -63,31 +63,32 @@ public class ProjectTasksController : Controller
             .Include(t => t.Comments)
             .Include(t => t.Users)
             .FirstOrDefaultAsync(t => t.Id == task.Id);
-        
+
         // Render the _ShowTask partial to a string
         string htmlString = await RenderViewAsync("~/Views/Shared/_ShowTask.cshtml", taskForView, true);
-        
+
         return Json(new { success = true, html = htmlString });
     }
 
     // POST: ProjectTasks/Edit
     [Authorize]
     [HttpPost]
-    public async Task<IActionResult> Edit(string id, string name, string description, DateTime? deadline, TaskStatusEnum? status)
+    public async Task<IActionResult> Edit(string id, string name, string description, DateTime? deadline,
+        TaskStatusEnum? status)
     {
         var task = await _db.Tasks
             .Include(t => t.ProjectParent)
             .FirstOrDefaultAsync(t => t.Id == id);
-        
+
         if (task == null) return NotFound();
-        
+
         if (task.ProjectParent.FounderId != _userManager.GetUserId(User) && !User.IsInRole("Admin"))
             return Forbid();
 
         task.Name = name;
         task.Description = description ?? task.Description;
         task.DeadLine = deadline ?? task.DeadLine;
-        
+
         if (status.HasValue)
         {
             task.Status = status.Value;
@@ -108,17 +109,18 @@ public class ProjectTasksController : Controller
         var task = await _db.Tasks
             .Include(t => t.ProjectParent)
             .FirstOrDefaultAsync(t => t.Id == taskId);
-        
+
         if (task == null) return NotFound();
-        
+
         if (task.ProjectParent.FounderId != _userManager.GetUserId(User) && !User.IsInRole("Admin"))
             return Forbid();
-        
+
         task.Name = newTitle;
 
         await _db.SaveChangesAsync();
         return Json(new { success = true });
     }
+
     [Authorize]
     [HttpPost]
     public async Task<IActionResult> EditDescription(string taskId, string description)
@@ -126,18 +128,18 @@ public class ProjectTasksController : Controller
         var task = await _db.Tasks
             .Include(t => t.ProjectParent)
             .FirstOrDefaultAsync(t => t.Id == taskId);
-        
+
         if (task == null) return NotFound();
-        
+
         if (task.ProjectParent.FounderId != _userManager.GetUserId(User) && !User.IsInRole("Admin"))
             return Forbid();
-        
+
         task.Description = description;
 
         await _db.SaveChangesAsync();
         return Json(new { success = true });
     }
-    
+
     [Authorize]
     [HttpPost]
     public async Task<IActionResult> EditDeadLine(string taskId, DateTime deadline)
@@ -145,12 +147,12 @@ public class ProjectTasksController : Controller
         var task = await _db.Tasks
             .Include(t => t.ProjectParent)
             .FirstOrDefaultAsync(t => t.Id == taskId);
-        
+
         if (task == null) return NotFound();
-        
+
         if (task.ProjectParent.FounderId != _userManager.GetUserId(User) && !User.IsInRole("Admin"))
             return Forbid();
-        
+
         task.DeadLine = deadline;
 
         await _db.SaveChangesAsync();
@@ -164,18 +166,18 @@ public class ProjectTasksController : Controller
         var task = await _db.Tasks
             .Include(t => t.ProjectParent)
             .FirstOrDefaultAsync(t => t.Id == taskId);
-        
+
         if (task == null) return NotFound();
-        
+
         if (task.ProjectParent.FounderId != _userManager.GetUserId(User) && !User.IsInRole("Admin"))
             return Forbid();
-        
+
         task.Status = statusEnum;
 
         await _db.SaveChangesAsync();
         return Json(new { success = true });
     }
-    
+
     // POST: ProjectTasks/Delete
     [Authorize]
     [HttpPost]
@@ -184,15 +186,15 @@ public class ProjectTasksController : Controller
         var task = await _db.Tasks
             .Include(t => t.ProjectParent)
             .FirstOrDefaultAsync(t => t.Id == id);
-        
+
         if (task == null) return NotFound();
-        
+
         if (task.ProjectParent.FounderId != _userManager.GetUserId(User) && !User.IsInRole("Admin"))
             return Forbid();
-        
+
         _db.Tasks.Remove(task);
         await _db.SaveChangesAsync();
-        
+
         return Json(new { success = true });
     }
 
@@ -204,9 +206,9 @@ public class ProjectTasksController : Controller
         var task = await _db.Tasks
             .Include(t => t.ProjectParent)
             .FirstOrDefaultAsync(t => t.Id == id);
-        
+
         if (task == null) return NotFound();
-        
+
         if (task.ProjectParent.FounderId != _userManager.GetUserId(User) && !User.IsInRole("Admin"))
             return Forbid();
 
@@ -250,84 +252,108 @@ public class ProjectTasksController : Controller
             return writer.GetStringBuilder().ToString();
         }
     }
-    
+
     [Authorize]
-[HttpPost]
-public async Task<IActionResult> UploadMedia(string taskId, IFormFile mediaFile)
-{
-    var task = await _db.Tasks
-        .Include(t => t.ProjectParent)
-        .FirstOrDefaultAsync(t => t.Id == taskId);
-
-    if (task == null) return NotFound();
-
-    // Check permissions (Founder or Admin only for uploading)
-    if (task.ProjectParent.FounderId != _userManager.GetUserId(User) && !User.IsInRole("Admin"))
-        return Forbid();
-
-    if (mediaFile != null && mediaFile.Length > 0)
+    [HttpPost]
+    public async Task<IActionResult> UploadMedia(string taskId, IFormFile mediaFile)
     {
-        // 1. Create the path to wwwroot/media
-        var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "media");
-        if (!Directory.Exists(uploadsFolder))
+        var task = await _db.Tasks
+            .Include(t => t.ProjectParent)
+            .FirstOrDefaultAsync(t => t.Id == taskId);
+
+        if (task == null) return NotFound();
+
+        // Check permissions (Founder or Admin only for uploading)
+        if (task.ProjectParent.FounderId != _userManager.GetUserId(User) && !User.IsInRole("Admin"))
+            return Forbid();
+
+        if (mediaFile != null && mediaFile.Length > 0)
         {
-            Directory.CreateDirectory(uploadsFolder);
+            // 1. Create the path to wwwroot/media
+            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "media");
+            if (!Directory.Exists(uploadsFolder))
+            {
+                Directory.CreateDirectory(uploadsFolder);
+            }
+
+            // 2. Generate unique filename
+            var uniqueFileName = Guid.NewGuid().ToString() + "_" + mediaFile.FileName;
+            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+            // 3. Save file to server
+            using (var fileStream = new FileStream(filePath, FileMode.Create))
+            {
+                await mediaFile.CopyToAsync(fileStream);
+            }
+
+            // 4. Delete old file if it exists (cleanup)
+            if (!string.IsNullOrEmpty(task.MediaUrl))
+            {
+                var oldPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", task.MediaUrl.TrimStart('/'));
+                if (System.IO.File.Exists(oldPath))
+                {
+                    System.IO.File.Delete(oldPath);
+                }
+            }
+
+            // 5. Update Database
+            task.MediaUrl = "/media/" + uniqueFileName;
+            await _db.SaveChangesAsync();
+
+            return Json(new { success = true, url = task.MediaUrl });
         }
 
-        // 2. Generate unique filename
-        var uniqueFileName = Guid.NewGuid().ToString() + "_" + mediaFile.FileName;
-        var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+        return Json(new { success = false, message = "No file selected" });
+    }
 
-        // 3. Save file to server
-        using (var fileStream = new FileStream(filePath, FileMode.Create))
-        {
-            await mediaFile.CopyToAsync(fileStream);
-        }
+    [Authorize]
+    [HttpPost]
+    public async Task<IActionResult> DeleteMedia(string taskId)
+    {
+        var task = await _db.Tasks.Include(t => t.ProjectParent).FirstOrDefaultAsync(t => t.Id == taskId);
+        if (task == null) return NotFound();
 
-        // 4. Delete old file if it exists (cleanup)
+        if (task.ProjectParent.FounderId != _userManager.GetUserId(User) && !User.IsInRole("Admin"))
+            return Forbid();
+
         if (!string.IsNullOrEmpty(task.MediaUrl))
         {
-            var oldPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", task.MediaUrl.TrimStart('/'));
-            if (System.IO.File.Exists(oldPath))
+            // Delete physical file
+            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", task.MediaUrl.TrimStart('/'));
+            if (System.IO.File.Exists(filePath))
             {
-                System.IO.File.Delete(oldPath);
+                System.IO.File.Delete(filePath);
             }
+
+            task.MediaUrl = null;
+            await _db.SaveChangesAsync();
+            return Json(new { success = true });
         }
 
-        // 5. Update Database
-        task.MediaUrl = "/media/" + uniqueFileName;
-        await _db.SaveChangesAsync();
-        
-        return Json(new { success = true, url = task.MediaUrl });
+        return Json(new { success = false });
     }
 
-    return Json(new { success = false, message = "No file selected" });
-}
-
-[Authorize]
-[HttpPost]
-public async Task<IActionResult> DeleteMedia(string taskId)
-{
-    var task = await _db.Tasks.Include(t => t.ProjectParent).FirstOrDefaultAsync(t => t.Id == taskId);
-    if (task == null) return NotFound();
-
-    if (task.ProjectParent.FounderId != _userManager.GetUserId(User) && !User.IsInRole("Admin"))
-        return Forbid();
-
-    if (!string.IsNullOrEmpty(task.MediaUrl))
+    public async Task<IActionResult> AsignOrRemoveUserToTask(string userId, string taskId)
     {
-        // Delete physical file
-        var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", task.MediaUrl.TrimStart('/'));
-        if (System.IO.File.Exists(filePath))
-        {
-            System.IO.File.Delete(filePath);
-        }
+        bool isAdded = true;
+        ApplicationUser? user = _db.ApplicationUsers.Find(userId);
+        ProjectTask? task = _db.Tasks.Include(t => t.Users).FirstOrDefault(t => t.Id == taskId );
+
+        if (user is null || task is null)
+            return NotFound();
         
-        task.MediaUrl = null;
-        await _db.SaveChangesAsync();
-        return Json(new { success = true });
+        if (task.Users.Contains(user))
+        {
+            isAdded = false;
+            task.Users.Remove(user);
+        }
+        else
+        {
+            isAdded = true;
+            task.Users.Add(user);
+        }
+
+        _db.SaveChanges();
+        return Json(new { success = true, isAdded });
     }
-    
-    return Json(new { success = false });
-}
 }

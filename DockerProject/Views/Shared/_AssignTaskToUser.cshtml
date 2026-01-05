@@ -1,0 +1,74 @@
+﻿@using Microsoft.EntityFrameworkCore
+@model DockerProject.Models.ProjectTask
+@inject DockerProject.Data.ApplicationDbContext _context
+
+<button class="btn btn-sm py-0 px-2 btn-outline-secondary border-0"
+        title="Assign users"
+        id="btn-launch-assign-modal-@Model.Id">
+    <i class="bi bi-person-plus-fill"></i>
+</button>
+
+<div class="modal fade" id="assign-modal-@Model.Id" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
+        <div class="modal-content shadow-lg border-0" style="border-radius: 12px; overflow: hidden;">
+            
+            <div class="modal-header bg-light py-2">
+                <h6 class="modal-title fw-bold">Assign Members</h6>
+                <button type="button" class="btn-close btn-sm" id="btn-close-assign-modal-@Model.Id"></button>
+            </div>
+            
+            <div class="modal-body p-0">
+                <div class="p-2 border-bottom">
+                    <input type="text" 
+                           class="form-control form-control-sm border-0 bg-light" 
+                           placeholder="Search members..." 
+                           id="search-users-@Model.Id"
+                           onkeyup="filterUsers('@Model.Id')">
+                </div>
+
+                <div class="overflow-auto" style="max-height: 300px;" id="user-list-container-@Model.Id">
+                    @{
+                        string currentProjectId = (string)ViewBag.projectId ?? Model.ProjectParentId; 
+                        // Note: If ViewBag is null, fallback to Model property if available, or ensure it's passed.
+                    }
+
+                    @foreach (var projectMember in _context.ProjectMembers
+                                  .Include(pm => pm.Member)
+                                  .Where(pm => pm.ProjectId == currentProjectId && pm.Status == ProjectMemberStatus.Accepted))
+                    {
+                        var isAssigned = Model.Users.Any(u => u.Id == projectMember.MemberId);
+                        var displayName = projectMember.Member.UserName ?? projectMember.Member.Email;
+
+                        <div class="d-flex align-items-center justify-content-between p-2 border-bottom user-item" 
+                             data-username="@displayName">
+                            
+                            <div class="text-truncate me-2" style="max-width: 150px;" title="@displayName">
+                                <i class="bi bi-person text-secondary me-1"></i>
+                                <span class="small fw-bold">@displayName</span>
+                            </div>
+
+                            <button class="btn btn-sm @(isAssigned ? "btn-success" : "btn-outline-secondary")"
+                                    id="btn-assign-@Model.Id-@projectMember.MemberId"
+                                    onclick="ajaxAsignOrRemoveUserFromTask('@projectMember.MemberId', '@Model.Id', '@displayName')">
+                                @(isAssigned ? "Assigned" : "Assign")
+                            </button>
+                        </div>
+                    }
+                    
+                    @if (!_context.ProjectMembers.Any(pm => pm.ProjectId == currentProjectId && pm.Status == ProjectMemberStatus.Accepted))
+                    {
+                         <div class="text-center p-3 text-muted small">No other members in project.</div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // jQuery activation for the modal (matching your existing style)
+        $('#btn-launch-assign-modal-@Model.Id').click(() => $('#assign-modal-@Model.Id').modal('show'));
+        $('#btn-close-assign-modal-@Model.Id').click(() => $('#assign-modal-@Model.Id').modal('hide'));
+    });
+</script>

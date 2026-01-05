@@ -697,3 +697,100 @@ function ajaxDeleteMedia(taskId) {
         })
         .catch(error => console.error('Error:', error));
 }
+
+
+// [site.js] - Updated Assignment Logic & Search
+
+function ajaxAsignOrRemoveUserFromTask(userId, taskId, userName) {
+    let formData = new FormData();
+    formData.append('userId', userId);
+    formData.append('taskId', taskId);
+
+    // Get button in the Modal (if it exists) to update its state
+    const modalBtn = document.getElementById(`btn-assign-${taskId}-${userId}`);
+
+    // Get the container in the Task Details view
+    const listContainer = document.getElementById(`assigned-users-container-${taskId}`);
+
+    fetch('/ProjectTasks/AsignOrRemoveUserToTask/', {
+        method: 'POST',
+        body: formData
+    }).then(response => {
+        if (response.ok) return response.json();
+        throw Error(response.statusText);
+    }).then(data => {
+        if (data.success) {
+
+            // --- CASE 1: User was ADDED ---
+            if (data.isAdded) {
+                // 1. Update Modal Button (Visual feedback)
+                if (modalBtn) {
+                    modalBtn.classList.replace('btn-outline-secondary', 'btn-success');
+                    modalBtn.innerText = "Assigned";
+                }
+
+                // 2. Add to "Assigned To" List in Task Details
+                // We check if it already exists to avoid duplicates
+                if (!document.getElementById(`assigned-user-row-${taskId}-${userId}`)) {
+                    const newRow = `
+                        <div class="d-flex align-items-center justify-content-between mb-2" id="assigned-user-row-${taskId}-${userId}">
+                            <div>
+                                <i class="bi bi-person-circle fs-6 me-1 text-secondary"></i>
+                                <span class="small">${userName}</span>
+                            </div>
+                            <div>
+                                <button class="btn btn-sm btn-outline-danger" 
+                                        onclick="ajaxAsignOrRemoveUserFromTask('${userId}', '${taskId}', '${userName}')">
+                                    Remove
+                                </button>
+                            </div>
+                        </div>`;
+
+                    // Remove "Unassigned" text if it exists
+                    const unassignedMsg = document.getElementById(`unassigned-msg-${taskId}`);
+                    if(unassignedMsg) unassignedMsg.remove();
+
+                    listContainer.insertAdjacentHTML('beforeend', newRow);
+                }
+            }
+            // --- CASE 2: User was REMOVED ---
+            else {
+                // 1. Update Modal Button
+                if (modalBtn) {
+                    modalBtn.classList.replace('btn-success', 'btn-outline-secondary');
+                    modalBtn.innerText = "Assign";
+                }
+
+                // 2. Remove from "Assigned To" List
+                const rowToRemove = document.getElementById(`assigned-user-row-${taskId}-${userId}`);
+                if (rowToRemove) {
+                    rowToRemove.remove();
+                }
+
+                // 3. If list is empty, show "Unassigned" (Optional cosmetic polish)
+                if (listContainer.children.length === 0) {
+                    listContainer.innerHTML = `<span class="small text-muted" id="unassigned-msg-${taskId}">Unassigned</span>`;
+                }
+            }
+        }
+    }).catch(error => console.error("Error:", error));
+}
+
+// Search Function for the Modal
+function filterUsers(taskId) {
+    const input = document.getElementById(`search-users-${taskId}`);
+    const filter = input.value.toLowerCase();
+    const container = document.getElementById(`user-list-container-${taskId}`);
+    const users = container.getElementsByClassName('user-item');
+
+    for (let i = 0; i < users.length; i++) {
+        const userName = users[i].getAttribute('data-username').toLowerCase();
+        if (userName.includes(filter)) {
+            users[i].classList.remove('d-none');
+            users[i].classList.add('d-flex');
+        } else {
+            users[i].classList.remove('d-flex');
+            users[i].classList.add('d-none');
+        }
+    }
+}
