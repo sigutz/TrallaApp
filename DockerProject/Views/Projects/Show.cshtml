@@ -15,7 +15,7 @@
     string currentUserId = UserManager.GetUserId(User);
     bool isAdmin = User.IsInRole("Admin");
     bool isOwner = currentUserId == Model.FounderId;
-    
+
     // Member Status Checks
     bool isMember = _context.ProjectMembers.FirstOrDefault(pm => pm.Status == ProjectMemberStatus.Accepted && pm.MemberId == currentUserId) != null;
     bool isBanned = _context.ProjectMembers.FirstOrDefault(pm => pm.Status == ProjectMemberStatus.Banned && pm.MemberId == currentUserId) != null;
@@ -23,7 +23,8 @@
     bool isInvited = _context.ProjectMembers.FirstOrDefault(pm => pm.Status == ProjectMemberStatus.Invited && pm.MemberId == currentUserId) != null;
     
     bool canEdit = isAdmin || isOwner;
-    
+    ViewBag.canEdit = canEdit;
+
     var userStarProject = Model.StarredBy.FirstOrDefault(s => s.Id == currentUserId);
     var starIcon = userStarProject != null ? "bi-star-fill" : "bi-star";
 }
@@ -37,7 +38,7 @@
 
                 <div class="card-header bg-white py-3">
                     <div class="d-flex justify-content-between align-items-start">
-                        
+
                         <div class="d-flex flex-column justify-content-center w-75">
 
                             <div class="d-flex align-items-center gap-2">
@@ -53,7 +54,7 @@
                                     <h2 class="m-0" id="display-project-title-text">@Model.Title</h2>
                                     @if (canEdit)
                                     {
-                                        <i class="bi bi-pencil text-secondary" style="cursor: pointer; opacity: 0.5;" 
+                                        <i class="bi bi-pencil text-secondary" style="cursor: pointer; opacity: 0.5;"
                                            title="Edit Title"
                                            onclick="toggle('project-title-display'); toggle('project-title-edit')"></i>
                                     }
@@ -61,12 +62,16 @@
 
                                 @if (canEdit)
                                 {
-                                    <div id="to-toggle-project-title-edit" class="d-none align-items-center gap-2 w-100">
-                                        <input type="text" id="input-project-title" class="form-control" value="@Model.Title" />
-                                        <button class="btn btn-sm btn-success" onclick="ajaxEditProjectTitle('@Model.Id')">
+                                    <div id="to-toggle-project-title-edit"
+                                         class="d-none align-items-center gap-2 w-100">
+                                        <input type="text" id="input-project-title" class="form-control"
+                                               value="@Model.Title"/>
+                                        <button class="btn btn-sm btn-success"
+                                                onclick="ajaxEditProjectTitle('@Model.Id')">
                                             <i class="bi bi-check-lg"></i>
                                         </button>
-                                        <button class="btn btn-sm btn-secondary" onclick="toggle('project-title-display'); toggle('project-title-edit')">
+                                        <button class="btn btn-sm btn-secondary"
+                                                onclick="toggle('project-title-display'); toggle('project-title-edit')">
                                             <i class="bi bi-x-lg"></i>
                                         </button>
                                     </div>
@@ -98,19 +103,25 @@
 
                                 @if (canEdit)
                                 {
-                                    <div id="to-toggle-project-fields-edit" class="d-none mt-2 p-3 border rounded bg-light">
+                                    <div id="to-toggle-project-fields-edit"
+                                         class="d-none mt-2 p-3 border rounded bg-light">
                                         <label class="form-label fw-bold">Manage Fields</label>
-                                        
+
                                         <div id="selectedFieldsBadges" class="d-flex flex-wrap gap-2 mb-2"></div>
-                                        
+
                                         <div id="hiddenInputsContainer"></div>
 
                                         <div class="d-flex flex-wrap justify-content-between align-items-center mt-2">
                                             <partial name="~/Views/Fields/_AddField.cshtml" model="_context.Fields"/>
-                                            
+
                                             <div class="d-flex gap-2 mt-2 mt-sm-0">
-                                                <button class="btn btn-success btn-sm" onclick="ajaxUpdateProjectFields('@Model.Id')">Save Tags</button>
-                                                <button class="btn btn-secondary btn-sm" onclick="toggle('project-fields-display'); toggle('project-fields-edit')">Cancel</button>
+                                                <button class="btn btn-success btn-sm"
+                                                        onclick="ajaxUpdateProjectFields('@Model.Id')">Save Tags
+                                                </button>
+                                                <button class="btn btn-secondary btn-sm"
+                                                        onclick="toggle('project-fields-display'); toggle('project-fields-edit')">
+                                                    Cancel
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
@@ -131,7 +142,6 @@
                             }
                             else
                             {
-
                                 <div class="text-end ms-2 small text-muted">
                                     <div>
                                         <i class="bi bi-calendar"></i> @Model.CreatedDate.ToString("MMM dd, yyyy")
@@ -166,73 +176,113 @@
                         @if (canEdit)
                         {
                             <div id="to-toggle-project-desc-edit" class="d-none mt-3">
-                                <textarea id="input-project-desc" class="form-control" rows="5">@Model.Description</textarea>
+                                <textarea id="input-project-desc" class="form-control"
+                                          rows="5">@Model.Description</textarea>
                                 <div class="mt-2 d-flex gap-2">
-                                    <button class="btn btn-outline-success btn-sm" onclick="ajaxEditProjectDescription('@Model.Id')">Save Description</button>
-                                    <button class="btn btn-outline-secondary btn-sm" onclick="toggle('project-desc-display'); toggle('project-desc-edit')">Cancel</button>
+                                    <button class="btn btn-outline-success btn-sm"
+                                            onclick="ajaxEditProjectDescription('@Model.Id')">Save Description
+                                    </button>
+                                    <button class="btn btn-outline-secondary btn-sm"
+                                            onclick="toggle('project-desc-display'); toggle('project-desc-edit')">Cancel
+                                    </button>
                                 </div>
                             </div>
                         }
                     </div>
 
-                    <div class="mb-4">
-                        <h5 class="text-secondary border-bottom pb-2 d-flex justify-content-between">Tasks</h5>
-                        <div class="container d-flex justify-content-evenly flex-row gap-5">
-                            
-                            <div class="d-flex card flex-column w-25">
-                                <div class="card-header"><h6>To Do</h6></div>
-                                <div class="card-body d-flex flex-column gap-2" id="task-container-ToDo">
-                                    @foreach (ProjectTask task in Model.Tasks.Where(t => t.Status == TaskStatusEnum.ToDo))
-                                    { <partial name="_ShowTask" model="task"/> }
-                                </div>
-                                <div class="card-footer">
-                                    <button class="btn btn-secondary btn-sm w-100" onclick="ajaxCreateTask('@Model.Id', 'ToDo')">
-                                        <i class="bi bi-plus-lg"></i> Add task
-                                    </button>
-                                </div>
-                            </div>
+                    @if (isMember || canEdit)
+                    {
+                        <div class="mb-4">
+                            <h5 class="text-secondary border-bottom pb-2 d-flex justify-content-between">Tasks</h5>
+                            <div class="container d-flex justify-content-evenly flex-row gap-5">
 
-                            <div class="d-flex card flex-column w-25">
-                                <div class="card-header"><h6>In Progress</h6></div>
-                                <div class="card-body d-flex flex-column gap-2" id="task-container-InProgress">
-                                    @foreach (ProjectTask task in Model.Tasks.Where(t => t.Status == TaskStatusEnum.InProgress))
-                                    { <partial name="_ShowTask" model="task"/> }
-                                </div>
-                                <div class="card-footer">
-                                    <button class="btn btn-secondary btn-sm w-100" onclick="ajaxCreateTask('@Model.Id', 'InProgress')">
-                                        <i class="bi bi-plus-lg"></i> Add task
-                                    </button>
-                                </div>
-                            </div>
+                                <div class="d-flex card flex-column w-25">
+                                    <div class="card-header"><h6>To Do</h6></div>
+                                    <div class="card-body d-flex flex-column gap-2" id="task-container-ToDo">
+                                        @foreach (ProjectTask task in Model.Tasks.Where(t => t.Status == TaskStatusEnum.ToDo))
+                                        {
+                                            <partial name="_ShowTask" model="task"/>
+                                        }
+                                    </div>
 
-                            <div class="d-flex card flex-column w-25">
-                                <div class="card-header"><h6>Review</h6></div>
-                                <div class="card-body d-flex flex-column gap-2" id="task-container-Review">
-                                    @foreach (ProjectTask task in Model.Tasks.Where(t => t.Status == TaskStatusEnum.Review))
-                                    { <partial name="_ShowTask" model="task"/> }
-                                </div>
-                                <div class="card-footer">
-                                    <button class="btn btn-secondary btn-sm w-100" onclick="ajaxCreateTask('@Model.Id', 'Review')">
-                                        <i class="bi bi-plus-lg"></i> Add task
-                                    </button>
-                                </div>
-                            </div>
+                                    @if (canEdit)
+                                    {
+                                        <div class="card-footer">
+                                            <button class="btn btn-secondary btn-sm w-100"
+                                                    onclick="ajaxCreateTask('@Model.Id', 'ToDo')">
+                                                <i class="bi bi-plus-lg"></i> Add task
+                                            </button>
+                                        </div>
+                                    }
 
-                            <div class="d-flex card flex-column w-25">
-                                <div class="card-header"><h6>Done</h6></div>
-                                <div class="card-body d-flex flex-column gap-2" id="task-container-Done">
-                                    @foreach (ProjectTask task in Model.Tasks.Where(t => t.Status == TaskStatusEnum.Done))
-                                    { <partial name="_ShowTask" model="task"/> }
                                 </div>
-                                <div class="card-footer">
-                                    <button class="btn btn-secondary btn-sm w-100" onclick="ajaxCreateTask('@Model.Id', 'Done')">
-                                        <i class="bi bi-plus-lg"></i> Add task
-                                    </button>
-                                </div>
-                            </div>
 
+                                <div class="d-flex card flex-column w-25">
+                                    <div class="card-header"><h6>In Progress</h6></div>
+                                    <div class="card-body d-flex flex-column gap-2" id="task-container-InProgress">
+                                        @foreach (ProjectTask task in Model.Tasks.Where(t => t.Status == TaskStatusEnum.InProgress))
+                                        {
+                                            <partial name="_ShowTask" model="task"/>
+                                        }
+                                    </div>
+
+                                    @if (canEdit)
+                                    {
+                                        <div class="card-footer">
+
+                                            <button class="btn btn-secondary btn-sm w-100"
+                                                    onclick="ajaxCreateTask('@Model.Id', 'InProgress')">
+                                                <i class="bi bi-plus-lg"></i> Add task
+                                            </button>
+                                        </div>
+                                    }
+
+                                </div>
+
+                                <div class="d-flex card flex-column w-25">
+                                    <div class="card-header"><h6>Review</h6></div>
+                                    <div class="card-body d-flex flex-column gap-2" id="task-container-Review">
+                                        @foreach (ProjectTask task in Model.Tasks.Where(t => t.Status == TaskStatusEnum.Review))
+                                        {
+                                            <partial name="_ShowTask" model="task"/>
+                                        }
+                                    </div>
+
+                                    @if (canEdit)
+                                    {
+                                        <div class="card-footer">
+
+                                            <button class="btn btn-secondary btn-sm w-100"
+                                                    onclick="ajaxCreateTask('@Model.Id', 'Review')">
+                                                <i class="bi bi-plus-lg"></i> Add task
+                                            </button>
+                                        </div>
+                                    }
+
+                                </div>
+
+                                <div class="d-flex card flex-column w-25">
+                                    <div class="card-header"><h6>Done</h6></div>
+                                    <div class="card-body d-flex flex-column gap-2" id="task-container-Done">
+                                        @foreach (ProjectTask task in Model.Tasks.Where(t => t.Status == TaskStatusEnum.Done))
+                                        {
+                                            <partial name="_ShowTask" model="task"/>
+                                        }
+                                    </div>
+                                    @if (canEdit)
+                                    {
+                                        <div class="card-footer">
+                                            <button class="btn btn-secondary btn-sm w-100"
+                                                    onclick="ajaxCreateTask('@Model.Id', 'Done')">
+                                                <i class="bi bi-plus-lg"></i> Add task
+                                            </button>
+                                        </div>
+                                    }
+                                </div>
+
+                            </div>
                         </div>
-                    </div>
+                    }
                 </div>
 
                 <div class="card-footer bg-light">
@@ -264,10 +314,16 @@
                                     }
 
                                     <div class="">
-                                        <partial name="_InviteUserToProject" model="_context.ApplicationUsers"/>
+                                        @{
+                                            var existingMemberIds = Model.Members.Select(m => m.MemberId).ToList();
+                                            existingMemberIds.Add(Model.FounderId);
+                                        }
+                                        <partial name="_InviteUserToProject"
+                                                 model="_context.ApplicationUsers.Where(u => !existingMemberIds.Contains(u.Id))"/>
                                     </div>
                                     <div class="m-1">
-                                        <a class="btn btn-secondary btn-sm " onclick="toggle('manageMembers')">Members</a>
+                                        <a class="btn btn-secondary btn-sm "
+                                           onclick="toggle('manageMembers')">Members</a>
                                     </div>
                                 </div>
                             }
@@ -275,102 +331,68 @@
                     </div>
                 </div>
 
-                <div class="d-none " id="to-toggle-pendingRequests">
-                    <h3>Requests</h3>
-                    @foreach (var pendingRequest in Model.Members.Where(pm => pm.Status == ProjectMemberStatus.Pending))
-                    {
-                        <div class="m-4 d-flex justify-content-evenly align-items-center "
-                             id="pending-request-@pendingRequest.ProjectId-@pendingRequest.MemberId">
-                            <div>@pendingRequest.Member.Email</div>
-                            <div class="d-inline-flex g-4">
-                                <div class="">
-                                    <button class="btn btn-secondary btn-sm "
-                                            onclick="RespondJoinRequest('@pendingRequest.ProjectId','@pendingRequest.MemberId', true)">
-                                        <i class="bi bi-check-lg "></i>
-                                    </button>
-                                </div>
-                                <br>
-                                <div class="">
-                                    <button class="btn btn-secondary btn-sm "
-                                            onclick="RespondJoinRequest('@pendingRequest.ProjectId','@pendingRequest.MemberId', false)">
-                                        <i class="bi bi-x "></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    }
-                </div>
+                <partial name="_PendingRequests"
+                         model="@Model.Members.Where(pm => pm.Status == ProjectMemberStatus.Pending)"/>
 
-                <div class="d-none m-4" id="to-toggle-manageMembers">
-                    <h5>Members</h5>
-                    @foreach (var member in Model.Members.Where(pm => pm.Status == ProjectMemberStatus.Accepted))
-                    {
-                        <div class="d-flex justify-content-evenly align-items-center "
-                             id="kick-@member.ProjectId-@member.MemberId">
-                            <div>@member.Member.Email</div>
-                            <div class="d-inline-flex m-1">
-                                <div class="m-1">
-                                    <a class="btn btn-secondary btn-sm">asign</a>
-                                </div>
-                                <div class="m-1">
-                                    <a class="btn btn-danger btn-sm"
-                                       onclick="KickUserFromProject('@member.ProjectId', '@member.MemberId')">kick</a>
-                                </div>
-                            </div>
-                        </div>
-                    }
-                </div>
-            </div> 
+                <partial name="_ManageMembers"
+                         model="@Model.Members.Where(pm => pm.Status == ProjectMemberStatus.Accepted)"/>
 
-            <div class="card shadow-sm">
-                <div class="card-header bg-light">
-                    <h5 class="m-0"><i class="bi bi-chat-left-text"></i> Comments</h5>
-                </div>
-
-                <div class="card-body">
-                    @{
-                        var topLevelComments = Model.Comments?
-                            .Where(c => c.CommentParentId == null && c.TaskParentId == null)
-                            .OrderByDescending(c => c.Date);
-                    }
-
-                    <div id="root-comments-@Model.Id">
-                        @if (topLevelComments != null && topLevelComments.Any())
-                        {
-                            foreach (var comment in topLevelComments)
-                            {
-                                <partial name="~/Views/Comments/_CommentThread.cshtml" model="comment"/>
-                            }
-                        }
-                        else
-                        {
-                            <p class="text-muted text-center py-3">No comments yet.</p>
-                        }
+            </div>
+            @if (isMember || canEdit)
+            {
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="m-0"><i class="bi bi-chat-left-text"></i> Comments</h5>
                     </div>
 
-                    @if (SignInManager.IsSignedIn(User))
-                    {
-                        <hr/>
-                        <div class="d-flex gap-3">
-                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center flex-shrink-0"
-                                 style="width: 38px; height: 38px;">
-                                @UserManager.GetUserName(User)?.Substring(0, 1).ToUpper()
-                            </div>
-                            <div class="flex-grow-1">
-                                <form onsubmit="ajaxAddComment(event, this, null)">
-                                    <input type="hidden" name="ProjectParentId" value="@Model.Id"/>
-                                    <textarea name="Content" class="form-control mb-2" rows="2"
-                                              placeholder="Add a comment..." required></textarea>
-                                    <button type="submit" class="btn btn-primary btn-sm rounded-pill px-3">Post Comment</button>
-                                </form>
-                            </div>
+                    <div class="card-body">
+                        @{
+                            var topLevelComments = Model.Comments?
+                                .Where(c => c.CommentParentId == null && c.TaskParentId == null)
+                                .OrderByDescending(c => c.Date);
+                        }
+
+                        <div id="root-comments-@Model.Id">
+                            @if (topLevelComments != null && topLevelComments.Any())
+                            {
+                                foreach (var comment in topLevelComments)
+                                {
+                                    <partial name="~/Views/Comments/_CommentThread.cshtml" model="comment"/>
+                                }
+                            }
+                            else
+                            {
+                                <p class="text-muted text-center py-3">No comments yet.</p>
+                            }
                         </div>
-                    }
+
+                        @if (SignInManager.IsSignedIn(User))
+                        {
+                            <hr/>
+                            <div class="d-flex gap-3">
+                                <div
+                                    class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center flex-shrink-0"
+                                    style="width: 38px; height: 38px;">
+                                    @UserManager.GetUserName(User)?.Substring(0, 1).ToUpper()
+                                </div>
+                                <div class="flex-grow-1">
+                                    <form onsubmit="ajaxAddComment(event, this, null)">
+                                        <input type="hidden" name="ProjectParentId" value="@Model.Id"/>
+                                        <textarea name="Content" class="form-control mb-2" rows="2"
+                                                  placeholder="Add a comment..." required></textarea>
+                                        <button type="submit" class="btn btn-primary btn-sm rounded-pill px-3">Post
+                                            Comment
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        }
+                    </div>
                 </div>
-            </div> 
-        </div> 
-    </div> 
-</div> 
+            }
+        </div>
+    </div>
+</div>
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {

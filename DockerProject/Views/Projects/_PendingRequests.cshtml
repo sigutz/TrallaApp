@@ -1,0 +1,211 @@
+﻿@using DockerProject.Models
+@model IEnumerable<ProjectMember>
+
+@{
+    // Helper function to get initials from Email or UserName
+    string GetInitials(string email)
+    {
+        if (string.IsNullOrEmpty(email)) return "?";
+        return email.Substring(0, 1).ToUpper();
+    }
+}
+
+<style>
+    .req-panel {
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        border: 1px solid rgba(0, 0, 0, 0.04);
+        overflow: hidden;
+        margin-top: 1.5rem;
+        transition: all 0.3s ease;
+        animation: slideDownFade 0.4s ease-out;
+    }
+
+    @@keyframes slideDownFade {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Header Styling */
+    .req-header {
+        background: linear-gradient(to right, #f8f9fa, #ffffff);
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .req-title {
+        font-weight: 700;
+        color: #2c3e50;
+        font-size: 1.1rem;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    /* List Item Styling */
+    .req-item {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #f5f5f5;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        transition: background-color 0.2s ease;
+    }
+
+    .req-item:last-child {
+        border-bottom: none;
+    }
+
+    .req-item:hover {
+        background-color: #fafbfc;
+    }
+
+    /* Avatar Styling */
+    .req-avatar {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 1.1rem;
+        box-shadow: 0 4px 10px rgba(37, 117, 252, 0.2);
+    }
+
+    /* Text Details */
+    .req-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .req-email {
+        font-weight: 600;
+        color: #344767;
+        font-size: 0.95rem;
+    }
+
+    .req-status {
+        font-size: 0.75rem;
+        color: #8392ab;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    /* Custom Buttons */
+    .req-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .btn-req {
+        border: none;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        cursor: pointer;
+    }
+
+    /* Accept Button */
+    .btn-req-accept {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+    }
+    .btn-req-accept:hover {
+        background-color: #2e7d32;
+        color: white;
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(46, 125, 50, 0.2);
+    }
+
+    /* Reject Button */
+    .btn-req-reject {
+        background-color: #ffebee;
+        color: #c62828;
+    }
+    .btn-req-reject:hover {
+        background-color: #c62828;
+        color: white;
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(198, 40, 40, 0.2);
+    }
+
+    .req-empty {
+        padding: 2rem;
+        text-align: center;
+        color: #a0aec0;
+    }
+</style>
+
+<div class="d-none" id="to-toggle-pendingRequests">
+    <div class="req-panel">
+        
+        <div class="req-header">
+            <h5 class="req-title">
+                Pending Requests
+                @if(Model.Any()) {
+                    <span class="badge bg-primary rounded-pill" style="font-size: 0.7em; vertical-align: middle;">@Model.Count()</span>
+                }
+            </h5>
+            <button type="button" class="btn-close" aria-label="Close" onclick="toggle('pendingRequests')"></button>
+        </div>
+
+        <div class="req-body">
+            @if (!Model.Any())
+            {
+                <div class="req-empty">
+                    <i class="bi bi-people fs-1 mb-2 d-block opacity-50"></i>
+                    <span>No pending requests at the moment.</span>
+                </div>
+            }
+            else
+            {
+                foreach (var request in Model)
+                {
+                    <div class="req-item" id="pending-request-@request.ProjectId-@request.MemberId">
+                        
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="req-avatar">
+                                @GetInitials(request.Member.Email)
+                            </div>
+                            
+                            <div class="req-info">
+                                <span class="req-email">@request.Member.Email</span>
+                                <span class="req-status">
+                                    <i class="bi bi-clock-history"></i> Requested to join
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="req-actions">
+                            <button class="btn-req btn-req-accept" 
+                                    title="Accept"
+                                    onclick="RespondJoinRequest('@request.ProjectId','@request.MemberId', true)">
+                                <i class="bi bi-check-lg fs-5"></i>
+                            </button>
+                            
+                            <button class="btn-req btn-req-reject" 
+                                    title="Reject"
+                                    onclick="RespondJoinRequest('@request.ProjectId','@request.MemberId', false)">
+                                <i class="bi bi-x fs-5"></i>
+                            </button>
+                        </div>
+                        
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>
