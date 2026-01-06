@@ -1,0 +1,99 @@
+<!-- Views/Dashboard/Index.cshtml -->
+@model DockerProject.ViewModels.DashboardViewModel
+
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="container-fluid">
+    <h1 class="mb-4">Dashboard</h1>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="btn-group" role="group">
+                <a asp-action="Index" class="btn @(Model.CurrentFilter == null ? "btn-primary" : "btn-outline-primary")">All Tasks</a>
+                <a asp-action="Index" asp-route-filter="pending" class="btn @(Model.CurrentFilter == "pending" ? "btn-warning" : "btn-outline-warning")">Pending</a>
+                <a asp-action="Index" asp-route-filter="in-progress" class="btn @(Model.CurrentFilter == "in-progress" ? "btn-info" : "btn-outline-info")">In Progress</a>
+                <a asp-action="Index" asp-route-filter="completed" class="btn @(Model.CurrentFilter == "completed" ? "btn-success" : "btn-outline-success")">Completed</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Upcoming Deadlines -->
+        <div class="col-md-4">
+            <div class="card border-danger mb-4">
+                <div class="card-header bg-danger text-white">Upcoming Deadlines</div>
+                <ul class="list-group list-group-flush">
+                    @if (Model.UpcomingDeadlines.Any())
+                    {
+                        @foreach (var task in Model.UpcomingDeadlines)
+                        {
+                            <li class="list-group-item d-flex justify-content-between">
+                                <div>
+                                    <strong>@task.Title</strong><br />
+                                    <small class="text-muted">@task.ProjectName</small>
+                                </div>
+                                <span class="badge @(task.DaysUntilDeadline <= 1 ? "bg-danger" : "bg-warning")">
+                                    @task.Deadline?.ToString("dd MMM")
+                                </span>
+                            </li>
+                        }
+                    }
+                    else
+                    {
+                        <li class="list-group-item text-muted">No upcoming deadlines</li>
+                    }
+                </ul>
+            </div>
+        </div>
+
+        <!-- Active Projects -->
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">Active Projects</div>
+                <div class="card-body">
+                    <div class="row">
+                        @foreach (var project in Model.ActiveProjects)
+                        {
+                            var progress = project.TaskCount > 0 ? (project.CompletedTaskCount * 100 / project.TaskCount) : 0;
+                            <div class="col-md-6 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h5>@project.Name</h5>
+                                        <div class="progress mb-2">
+                                            <div class="progress-bar bg-success" style="width: @progress%">@progress%</div>
+                                        </div>
+                                        <small class="text-muted">@project.CompletedTaskCount / @project.TaskCount tasks</small>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tasks by Status -->
+    <div class="row">
+        @foreach (var group in Model.TasksByStatus)
+        {
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-header">@group.Key (@group.Value.Count)</div>
+                    <ul class="list-group list-group-flush">
+                        @foreach (var task in group.Value.Take(5))
+                        {
+                            <li class="list-group-item @(task.IsOverdue ? "list-group-item-danger" : "")">
+                                <strong>@task.Title</strong><br />
+                                <small class="text-muted">@task.ProjectName</small>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        }
+    </div>
+</div>
