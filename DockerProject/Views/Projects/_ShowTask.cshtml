@@ -72,12 +72,15 @@
 
                             <span id="task-title-text-@Model.Id" class="me-2">@Model.Name</span>
 
-                            <button onclick="toggle('@Model.Id-1'); toggle('@Model.Id-2')"
-                                    class="btn btn-sm border-0 text-muted p-1"
-                                    title="Edit title"
-                                    style="transition: color 0.2s; line-height: 0;">
-                                <i class="bi bi-pencil fs-6"></i>
-                            </button>
+                            @if (ViewBag.canEdit)
+                            {
+                                <button onclick="toggle('@Model.Id-1'); toggle('@Model.Id-2')"
+                                        class="btn btn-sm border-0 text-muted p-1"
+                                        title="Edit title"
+                                        style="transition: color 0.2s; line-height: 0;">
+                                    <i class="bi bi-pencil fs-6"></i>
+                                </button>
+                            }
                         </div>
 
                         <div id="to-toggle-@Model.Id-1" class="d-none w-100">
@@ -122,6 +125,10 @@
                             <div class="mb-4">
                                 <h6 class="text-uppercase text-muted small fw-bold mb-2">Tags</h6>
                                 <div class="d-flex flex-wrap gap-2">
+                                    @if (!Model.Tags.Any() && !ViewBag.canEdit)
+                                    {
+                                        <span class="text-muted fst-italic">No tags yet.</span>
+                                    }
                                     @foreach (var tag in Model.Tags)
                                     {
                                         <span class="badge rounded-pill border d-flex align-items-center gap-1"
@@ -136,8 +143,10 @@
                                                onclick="removeTag('@tag.Id', '@Model.Id')"></i>
                                         </span>
                                     }
-
-                                    <partial name="_SelectTag.cshtml" model="@Model"/>
+                                    @if (ViewBag.canEdit)
+                                    {
+                                        <partial name="_SelectTag.cshtml" model="@Model"/>
+                                    }
                                 </div>
                             </div>
 
@@ -179,13 +188,16 @@
                                         }
                                     </div>
 
-                                    <button
-                                        onclick="toggle('@Model.Id-desc-1'); toggle('@Model.Id-desc-2'); toggle('@Model.Id-desc-3')"
-                                        class="btn btn-sm border-0 text-muted p-1 position-absolute top-0 end-0 m-2"
-                                        title="Edit description"
-                                        style="transition: color 0.2s;">
-                                        <i class="bi bi-pencil fs-6"></i>
-                                    </button>
+                                    @if (ViewBag.canEdit)
+                                    {
+                                        <button
+                                            onclick="toggle('@Model.Id-desc-1'); toggle('@Model.Id-desc-2'); toggle('@Model.Id-desc-3')"
+                                            class="btn btn-sm border-0 text-muted p-1 position-absolute top-0 end-0 m-2"
+                                            title="Edit description"
+                                            style="transition: color 0.2s;">
+                                            <i class="bi bi-pencil fs-6"></i>
+                                        </button>
+                                    }
                                 </div>
 
                                 <div id="to-toggle-@Model.Id-desc-1" class="d-none w-100">
@@ -207,41 +219,70 @@
                                             <span class="fw-bold">@Model.AssignedDate.ToString("dd MMM yyyy")</span>
                                         </li>
 
-                                        <li class="mb-2 d-flex justify-content-between align-items-center height-control">
-                                            <span class="text-muted">Status:</span>
+                                        @{
+                                            // Simple logic to choose a color based on the status
+                                            var statusBadgeClass = Model.Status switch
+                                            {
+                                                DockerProject.Models.TaskStatusEnum.Done => "bg-success",
+                                                DockerProject.Models.TaskStatusEnum.InProgress => "bg-primary",
+                                                DockerProject.Models.TaskStatusEnum.Review => "bg-warning text-dark",
+                                                _ => "bg-secondary" // Default for ToDo
+                                            };
+                                        }
+
+                                        <li class="d-flex justify-content-between align-items-center py-2">
+                                            <span class="text-muted ">
+                                                Status:
+                                            </span>
 
                                             <div id="to-toggle-@Model.Id-status-2" class="d-block">
-                                                <span class="badge bg-secondary"
-                                                      style="cursor: pointer; transition: 0.2s;"
-                                                      onmouseover="this.classList.replace('bg-secondary', 'bg-dark')"
-                                                      onmouseout="this.classList.replace('bg-dark', 'bg-secondary')"
-                                                      onclick="toggle('@Model.Id-status-1'); toggle('@Model.Id-status-2')"
-                                                      title="Click to change status">@Model.Status
-                                                    <i class="bi bi-pencil-fill ms-1" style="font-size: 0.7em;"></i>
-                                                </span>
+                                                @if (ViewBag.canEdit)
+                                                {
+                                                    <span class="badge @statusBadgeClass rounded-pill shadow-sm px-3 py-2"
+                                                          style="cursor: pointer; transition: all 0.2s ease; user-select: none;"
+                                                          onclick="toggle('@Model.Id-status-1'); toggle('@Model.Id-status-2')"
+                                                          onmouseover="this.style.opacity = '0.8'; this.style.transform = 'scale(1.05)';"
+                                                          onmouseout="this.style.opacity = '1'; this.style.transform = 'scale(1)';"
+                                                          title="Click to change status">
+
+                                                        <span class="me-1">@Model.Status</span>
+                                                        <i class="bi bi-pencil-fill opacity-50"
+                                                           style="font-size: 0.7em;"></i>
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge @statusBadgeClass rounded-pill shadow-sm px-3 py-2">
+                                                        <span class="me-1">@Model.Status</span>
+                                                    </span>
+                                                }
                                             </div>
 
                                             <div id="to-toggle-@Model.Id-status-1" class="d-none">
-                                                <div class="input-group input-group-sm">
-                                                    <select class="form-select form-select-sm"
-                                                            id="input-status-@Model.Id">
+                                                <div class="input-group input-group-sm shadow-sm"
+                                                     style="min-width: 160px;">
+                                                    <select class="form-select border-success"
+                                                            id="input-status-@Model.Id"
+                                                            style="font-size: 0.85rem;">
                                                         @foreach (var status in Enum.GetValues(typeof(DockerProject.Models.TaskStatusEnum)))
                                                         {
-                                                            <!option value="@status"
-                                                                     @(Model.Status.Equals(status) ? "selected" : "")>
+                                                            <option value="@status"
+                                                                    selected="@(Model.Status.Equals(status))">
                                                                 @status
-                                                            </!option>
+                                                            </option>
                                                         }
                                                     </select>
+
                                                     <button class="btn btn-success"
                                                             type="button"
                                                             onclick="ajaxEditTaskStatus('@Model.Id', document.getElementById('input-status-@Model.Id').value)">
-                                                        <i class="bi bi-check"></i>
+                                                        <i class="bi bi-check-lg"></i>
                                                     </button>
-                                                    <button class="btn btn-outline-secondary"
+
+                                                    <button class="btn btn-light border"
                                                             type="button"
                                                             onclick="toggle('@Model.Id-status-1'); toggle('@Model.Id-status-2')">
-                                                        <i class="bi bi-x"></i>
+                                                        <i class="bi bi-x-lg text-secondary"></i>
                                                     </button>
                                                 </div>
                                             </div>
@@ -249,20 +290,31 @@
 
 
                                         <li class="mb-2 d-flex justify-content-between align-items-center height-control">
-                                            <span class="text-muted">Deadline:</span>
+                                            <span class="text-muted fw-bold">Deadline:</span>
 
                                             <div id="to-toggle-@Model.Id-deadline-2" class="d-block">
-                                                <span class="fw-bold text-danger"
-                                                      id="display-deadline-@Model.Id"
-                                                      style="cursor: pointer; border-bottom: 1px dashed transparent;"
-                                                      onmouseover="this.style.borderBottom='1px dashed #dc3545'"
-                                                      onmouseout="this.style.borderBottom='1px dashed transparent'"
-                                                      onclick="toggle('@Model.Id-deadline-1'); toggle('@Model.Id-deadline-2')"
-                                                      title="Click to edit deadline">
-                                                    @Model.DeadLine.ToString("dd MMM yyyy HH:mm")
-                                                    <i class="bi bi-pencil-fill ms-1 text-muted"
-                                                       style="font-size: 0.7em;"></i>
-                                                </span>
+                                                @if (ViewBag.canEdit)
+                                                {
+                                                    <span class="fw-bold text-danger"
+                                                          id="display-deadline-@Model.Id"
+                                                          style="cursor: pointer; border-bottom: 1px dashed transparent;"
+                                                          onmouseover="this.style.borderBottom='1px dashed #dc3545'"
+                                                          onmouseout="this.style.borderBottom='1px dashed transparent'"
+                                                          onclick="toggle('@Model.Id-deadline-1'); toggle('@Model.Id-deadline-2')"
+                                                          title="Click to edit deadline">
+                                                        @Model.DeadLine.ToString("dd MMM yyyy HH:mm")
+                                                        <i class="bi bi-pencil-fill ms-1 text-muted"
+                                                           style="font-size: 0.7em;"></i>
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="fw-bold text-danger"
+                                                          id="display-deadline-@Model.Id"
+                                                          title="Click to edit deadline">
+                                                        @Model.DeadLine.ToString("dd MMM yyyy HH:mm")
+                                                    </span>
+                                                }
                                             </div>
 
                                             <div id="to-toggle-@Model.Id-deadline-1" class="d-none">
@@ -288,28 +340,30 @@
                                         <li>
                                             <div class="mt-4">
                                                 <div class="d-flex justify-content-between align-items-center mb-2">
-                                                    <h6 class="text-uppercase text-muted small fw-bold m-0">Creative
-                                                        Media</h6>
+                                                    <h6 class="text-uppercase text-muted small fw-bold m-0">Creative Media</h6>
 
-                                                    <div class="d-flex gap-2">
-                                                        <input type="file" id="media-upload-@Model.Id" class="d-none"
-                                                               accept="image/*,video/*"
-                                                               onchange="ajaxUploadMedia('@Model.Id', this)">
+                                                    @if (ViewBag.canEdit)
+                                                    {
+                                                        <div class="d-flex gap-2">
+                                                            <input type="file" id="media-upload-@Model.Id" class="d-none"
+                                                                   accept="image/*,video/*"
+                                                                   onchange="ajaxUploadMedia('@Model.Id', this)">
 
-                                                        <button class="btn btn-sm btn-outline-primary py-0 px-2"
-                                                                title="Upload Photo/Video"
-                                                                onclick="document.getElementById('media-upload-@Model.Id').click()">
-                                                            <i class="bi bi-upload"></i>
-                                                        </button>
+                                                            <button class="btn btn-sm btn-outline-primary py-0 px-2"
+                                                                    title="Upload Photo/Video"
+                                                                    onclick="document.getElementById('media-upload-@Model.Id').click()">
+                                                                <i class="bi bi-upload"></i>
+                                                            </button>
 
-                                                        <button
-                                                            class="btn btn-sm btn-outline-danger py-0 px-2 @(string.IsNullOrEmpty(Model.MediaUrl) ? "d-none" : "")"
-                                                            id="btn-delete-media-@Model.Id"
-                                                            title="Remove Media"
-                                                            onclick="ajaxDeleteMedia('@Model.Id')">
-                                                            <i class="bi bi-trash"></i>
-                                                        </button>
-                                                    </div>
+                                                            <button
+                                                                class="btn btn-sm btn-outline-danger py-0 px-2 @(string.IsNullOrEmpty(Model.MediaUrl) ? "d-none" : "")"
+                                                                id="btn-delete-media-@Model.Id"
+                                                                title="Remove Media"
+                                                                onclick="ajaxDeleteMedia('@Model.Id')">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </div>
+                                                    }
                                                 </div>
 
                                                 <div class="p-2 bg-light rounded text-center border position-relative"
@@ -360,7 +414,10 @@
                                         <div>
                                             <h6 class="text-uppercase text-muted small fw-bold m-0">Assigned To</h6>
                                         </div>
-                                        <partial name="_AssignTaskToUser.cshtml" model="@Model"/>
+                                        @if (ViewBag.canEdit)
+                                        {
+                                            <partial name="_AssignTaskToUser.cshtml" model="@Model"/>
+                                        }
                                     </div>
 
                                     <div class="d-flex gap-1 flex-column" id="assigned-users-container-@Model.Id">
@@ -369,15 +426,15 @@
                                             foreach (var user in Model.Users)
                                             {
                                                 var displayName = user.UserName ?? user.Email;
-                
-                                                <div class="d-flex align-items-center justify-content-between mb-2" 
+
+                                                <div class="d-flex align-items-center justify-content-between mb-2"
                                                      id="assigned-user-row-@Model.Id-@user.Id">
                                                     <div>
                                                         <i class="bi bi-person-circle fs-6 me-1 text-secondary"></i>
                                                         <span class="small">@displayName</span>
                                                     </div>
                                                     <div>
-                                                        <button class="btn btn-sm btn-outline-danger" 
+                                                        <button class="btn btn-sm btn-outline-danger"
                                                                 onclick="ajaxAsignOrRemoveUserFromTask('@user.Id', '@Model.Id', '@displayName')">
                                                             Remove
                                                         </button>
@@ -387,7 +444,8 @@
                                         }
                                         else
                                         {
-                                            <span class="small text-muted" id="unassigned-msg-@Model.Id">Unassigned</span>
+                                            <span class="small text-muted"
+                                                  id="unassigned-msg-@Model.Id">Unassigned</span>
                                         }
                                     </div>
                                 </div>

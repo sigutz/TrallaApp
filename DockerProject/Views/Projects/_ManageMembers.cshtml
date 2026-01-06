@@ -1,0 +1,192 @@
+﻿@using DockerProject.Models
+@model IEnumerable<ProjectMember>
+
+@{
+    string GetInitials(string email)
+    {
+        if (string.IsNullOrEmpty(email)) return "?";
+        return email.Substring(0, 1).ToUpper();
+    }
+}
+
+<style>
+    /* Panel Container */
+    .member-panel {
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        border: 1px solid rgba(0, 0, 0, 0.04);
+        overflow: hidden;
+        margin-top: 1.5rem;
+        animation: slideDownFade 0.4s ease-out;
+    }
+
+    /* Double @@ to escape for Razor */
+    @@keyframes slideDownFade {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Header */
+    .member-header {
+        background: linear-gradient(to right, #f8f9fa, #ffffff);
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    /* Member Row */
+    /* We use !important on display to ensure custom CSS overrides if necessary, 
+       but we keep 'd-flex' in HTML for the JS toggle compatibility */
+    .member-item {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #f5f5f5;
+        align-items: center;
+        justify-content: space-between;
+        transition: background-color 0.2s ease;
+    }
+
+    .member-item:last-child {
+        border-bottom: none;
+    }
+
+    .member-item:hover {
+        background-color: #fafbfc;
+    }
+
+    /* Avatar */
+    .member-avatar {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        /* Different gradient to distinguish from Pending requests */
+        background: linear-gradient(135deg, #FF9966 0%, #FF5E62 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        box-shadow: 0 4px 10px rgba(255, 94, 98, 0.2);
+    }
+
+    /* Info Text */
+    .member-email {
+        font-weight: 600;
+        color: #344767;
+        font-size: 0.95rem;
+    }
+
+    .member-role {
+        font-size: 0.75rem;
+        color: #8392ab;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    /* Action Buttons */
+    .btn-action-group {
+        display: flex;
+        gap: 8px;
+    }
+
+    .btn-mem {
+        border: none;
+        padding: 6px 16px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    /* Assign Button Styling */
+    .btn-mem-assign {
+        background-color: #f0f2f5;
+        color: #6c757d;
+        text-decoration: none; /* For the <a> tag */
+    }
+    .btn-mem-assign:hover {
+        background-color: #e9ecef;
+        color: #495057;
+    }
+
+    /* Kick Button Styling */
+    .btn-mem-kick {
+        background-color: #fff5f5;
+        color: #e03131;
+    }
+    .btn-mem-kick:hover {
+        background-color: #ffe3e3;
+        color: #c92a2a;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 5px rgba(224, 49, 49, 0.1);
+    }
+</style>
+
+<div class="d-none" id="to-toggle-manageMembers">
+    <div class="member-panel">
+        <div class="member-header">
+            <div>
+                <h5 class="fw-bold text-dark m-0">Team Members</h5>
+                <p class="text-muted small m-0">People currently active in this project</p>
+            </div>
+            <button type="button" class="btn-close" aria-label="Close" onclick="toggle('manageMembers')"></button>
+        </div>
+
+        <div>
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-person-x fs-1 opacity-50"></i>
+                    <p class="mt-2">No active members found.</p>
+                </div>
+            }
+            else
+            {
+                @foreach (var member in Model)
+                {
+                    /* IMPORTANT: 
+                       1. We keep id="kick-..." so JS can find it.
+                       2. We keep class="d-flex" because your JS specifically searches for 'd-flex' 
+                          to replace it with 'd-none'.
+                    */
+                    <div class="member-item d-flex" id="kick-@member.ProjectId-@member.MemberId">
+                        
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="member-avatar">
+                                @GetInitials(member.Member.Email)
+                            </div>
+                            <div>
+                                <div class="member-email">@member.Member.Email</div>
+                                <div class="member-role">
+                                    <i class="bi bi-circle-fill text-success" style="font-size: 6px;"></i>
+                                    Active Member
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="btn-action-group">
+                            <a class="btn-mem btn-mem-assign" href="#" title="Assign Tasks">
+                                <i class="bi bi-list-task"></i>
+                                <span class="d-none d-md-inline">Assign</span>
+                            </a>
+
+                            <button class="btn-mem btn-mem-kick" 
+                                    onclick="KickUserFromProject('@member.ProjectId', '@member.MemberId')"
+                                    title="Remove User">
+                                <i class="bi bi-person-dash-fill"></i>
+                                <span class="d-none d-md-inline">Kick</span>
+                            </button>
+                        </div>
+
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>
