@@ -497,7 +497,7 @@ public class ProjectsController(
         if (project is null)
             return NotFound();
 
-        bool isSomethingNew = project.Tasks.Any(t => t.AssignedDate > project.SummaryRealizedAt) ||
+        bool isSomethingNew = project.SummaryRealizedAt == null || project.Tasks.Any(t => t.AssignedDate > project.SummaryRealizedAt) ||
                               project.Comments
                                   .Where(c => c.Date > project.SummaryRealizedAt)
                                   .Sum(c => c.Votes.Count) + project.Tasks
