@@ -1,0 +1,360 @@
+﻿@model DockerProject.Models.Project
+
+<style>
+    /* Trigger Button Styling */
+    #ai-summary-btn {
+        position: fixed;
+        bottom: 25px;
+        right: 25px;
+        z-index: 2000;
+        background-color: transparent;
+        border: none;
+        padding: 0;
+    }
+
+    #ai-summary-btn button {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background-color: #333;
+        color: #fff;
+        border: 2px solid #444;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        font-size: 24px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    #ai-summary-btn button:hover {
+        background-color: #555;
+        transform: scale(1.1);
+    }
+
+    /* Outer Sidenav - Handles the sliding animation only */
+    .sidenav-right {
+        height: 100%;
+        width: 0; /* Default closed */
+        position: fixed;
+        z-index: 1000;
+        top: 0;
+        right: 0;
+        background-color: #111;
+        overflow-x: hidden; /* Critical for hiding content */
+        transition: 0.4s;
+        box-shadow: -5px 0 15px rgba(0, 0, 0, 0.7);
+        padding: 0; /* IMPORTANT: Padding must be 0 here to fully hide */
+    }
+
+    /* Inner Wrapper - Handles the layout and spacing */
+    .sidenav-content-wrapper {
+        width: 350px; /* Fixed width prevents text reflow/squishing */
+        padding-top: 80px;
+        padding-left: 25px;
+        padding-right: 25px;
+        padding-bottom: 40px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    /* Close Button */
+    .sidenav-right .closebtn {
+        position: absolute;
+        top: 20px;
+        right: 25px;
+        font-size: 36px;
+        margin-left: 0;
+        color: #818181;
+        text-decoration: none;
+        line-height: 1;
+        transition: 0.2s;
+        cursor: pointer;
+    }
+
+    .sidenav-right .closebtn:hover {
+        color: #f1f1f1;
+    }
+
+    /* Content Styling */
+    .summary-block {
+        color: #ccc;
+        font-size: 15px;
+        line-height: 1.6;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #333;
+        white-space: normal;
+    }
+
+    .summary-block:last-of-type {
+        border-bottom: none;
+    }
+
+    /* Action Button Styling */
+    .action-btn {
+        margin-top: 20px;
+        padding: 12px 20px;
+        background-color: #444;
+        color: #fff;
+        text-align: center;
+        text-decoration: none;
+        border-radius: 6px;
+        font-weight: 600;
+        transition: background 0.3s;
+        display: block;
+    }
+
+    .action-btn:hover {
+        background-color: #666;
+        color: #fff;
+        text-decoration: none;
+    }
+
+    /* Task Card Styling */
+    .task-card {
+        background-color: #1e1e1e;
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 12px;
+        border-left: 4px solid #555; /* Default border color */
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        transition: transform 0.2s;
+    }
+
+    .task-card:hover {
+        transform: translateX(5px);
+        background-color: #252525;
+    }
+
+    .task-header {
+        font-size: 12px;
+        text-transform: uppercase;
+        font-weight: bold;
+        letter-spacing: 1px;
+        margin-bottom: 5px;
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 4px;
+        color: #fff;
+    }
+
+    .task-content {
+        font-size: 14px;
+        color: #ccc;
+        line-height: 1.6; /* Increased slightly for better reading */
+        white-space: pre-line; /* Respects the \n from the AI */
+
+        /* THE MAGIC PART */
+        text-align: justify; /* Aligns text to both left and right edges */
+        text-justify: inter-word; /* Tells browser to adjust space between words */
+
+        /* PREVENTS UGLY GAPS */
+        hyphens: auto; /* Adds dashes (-) to break long words */
+        -webkit-hyphens: auto; /* Safari support */
+        -ms-hyphens: auto; /* IE/Edge support */
+        word-wrap: break-word;
+    }
+
+    .status-todo {
+        border-color: #3498db;
+    }
+
+    .status-todo .task-header {
+        background-color: #3498db;
+    }
+
+    .status-review {
+        border-color: #f1c40f;
+    }
+
+    .status-review .task-header {
+        background-color: #f1c40f;
+        color: #000;
+    }
+
+    .status-done {
+        border-color: #2ecc71;
+    }
+
+    .status-done .task-header {
+        background-color: #2ecc71;
+    }
+
+    .status-inprogress {
+        border-color: #e67e22;
+    }
+
+    .status-inprogress .task-header {
+        background-color: #e67e22;
+    }
+</style>
+
+<div id="ai-summary-btn">
+    <button onclick="openAISummary()" title="Open AI Summary">
+        <i class="bi bi-chat-right-text"></i>
+    </button>
+</div>
+
+<div class="sidenav-right" id="AISummary">
+    <div class="sidenav-content-wrapper">
+        <a href="javascript:void(0)" class="closebtn" onclick="closeAISummary()">&times;</a>
+
+        <div class="summary-block">
+            <strong class="d-block text-white mb-2">Overall Summary</strong>
+            <div id="overAllSummaryText">@Model.AISummaryOverAll</div>
+        </div>
+
+        <div class="summary-block">
+            <strong class="d-block text-white mb-3">Tasks Analysis</strong>
+
+            <div id="tasks-container"></div>
+
+            <input type="hidden" id="raw-task-data" value="@Model.AiSummaryTasks"/>
+        </div>
+
+        <div class="summary-block">
+            <strong class="d-block text-white mb-2">Team Members</strong>
+            <div id="membersSummaryText">@Model.AiSummaryMembers</div>
+        </div>
+
+        <div class="summary-block">
+            <strong class="d-block text-white mb-2">Identified Issues</strong>
+            <div id="problemsSummaryText">@Model.AiSummaryProblemsIdentifyInComments</div>
+        </div>
+
+        <a onclick="getAISummary('@Model.Id')" href="javascript:void(0)"
+           class="action-btn" id="ai-request-summary-btn">
+            <i class="bi bi-cpu"></i> Generate New Summary
+        </a>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        renderTasks();
+    });
+    
+    function renderTasks(directData = null) {
+        let rawData = directData;
+        if (!rawData) {
+            const inputElement = document.getElementById("raw-task-data");
+            if (inputElement) rawData = inputElement.value;
+        }
+
+        const container = document.getElementById("tasks-container");
+
+        if (!rawData || rawData.trim() === "") {
+            container.innerHTML = "<span class='text-muted' style='font-size:12px;'>No task analysis data found.</span>";
+            return;
+        }
+
+
+        rawData = rawData.replace(/\\n/g, '\n').replace(/\r\n/g, '\n');
+
+
+        const regex = /\[Status:\s*([^\]]+)\]:?\s*([\s\S]*?)(?=\s*\[Status:|$)/gi;
+
+        let match;
+        let htmlContent = "";
+        let foundAny = false;
+
+        while ((match = regex.exec(rawData)) !== null) {
+            foundAny = true;
+            const statusRaw = match[1].trim(); 
+
+            const content = match[2].trim().replace(/\n/g, "<br>");
+
+            let statusClass = "status-todo"; // Default Blue
+            const lowerStatus = statusRaw.toLowerCase();
+
+            if (lowerStatus.includes("review")) statusClass = "status-review";       // Yellow
+            else if (lowerStatus.includes("done")) statusClass = "status-done";      // Green
+            else if (lowerStatus.includes("progress")) statusClass = "status-inprogress"; // Orange
+
+            htmlContent += `
+            <div class="task-card ${statusClass}">
+                <div class="task-header">${statusRaw}</div>
+                <div class="task-content">${content}</div>
+            </div>
+        `;
+        }
+
+        if (!foundAny) {
+            const safeContent = rawData.replace(/\n/g, "<br>");
+            htmlContent = `<div class="task-card status-todo"><div class="task-content">${safeContent}</div></div>`;
+        }
+
+        container.innerHTML = htmlContent;
+    }
+
+
+    function getAISummary(projectId) {
+        const actionBtn = document.querySelector('.action-btn');
+        const originalBtnContent = actionBtn.innerHTML;
+
+        actionBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Generating...';
+        actionBtn.style.pointerEvents = 'none'; // Disable clicks to prevent double submission
+
+        let formData = new FormData();
+        formData.append("projectId", projectId);
+
+        fetch(
+            "/Projects/GetAiDescription/",
+            {
+                method: 'POST',
+                body: formData
+            }
+        ).then(response => {
+            if (response.ok)
+                return response.json();
+            throw Error(response.statusText);
+        }).then(data => {
+            if (data.success) {
+                const overAllText = document.getElementById('overAllSummaryText');
+                const tasksDataInput = document.getElementById('raw-task-data');
+                const membersText = document.getElementById('membersSummaryText');
+                const problemsText = document.getElementById('problemsSummaryText');
+
+                const fixNewLines = (text) => text ? text.replace(/\\n/g, "<br>").replace(/\n/g, "<br>") : "";
+
+                overAllText.innerHTML = fixNewLines(data.overAll);
+                membersText.innerHTML = fixNewLines(data.members);
+                problemsText.innerHTML = fixNewLines(data.problems);
+
+
+                tasksDataInput.value = data.tasks;
+                renderTasks(data.tasks);
+
+                alert("AI Summary Updated Successfully!");
+            } else {
+                alert('Nu sunt suficiente modificari la proiect pentru o noua analiza.');
+            }
+        }).catch(error => {
+            console.error("Error:", error);
+            alert("A aparut o eroare la actualizare. Va rugam incercati din nou.");
+        }).finally(() => {
+            actionBtn.innerHTML = originalBtnContent;
+            actionBtn.style.pointerEvents = 'auto';
+        });
+    }
+
+    const sidebarWidth = "350px";
+
+    function openAISummary() {
+        document.getElementById("AISummary").style.width = sidebarWidth;
+        if (document.getElementById("main")) {
+            document.getElementById("main").style.marginRight = sidebarWidth;
+        }
+        document.getElementById('ai-summary-btn').classList.add('d-none');
+    }
+
+    function closeAISummary() {
+        document.getElementById("AISummary").style.width = "0";
+        if (document.getElementById("main")) {
+            document.getElementById("main").style.marginRight = "0";
+        }
+        document.getElementById('ai-summary-btn').classList.remove('d-none');
+    }
+</script>
