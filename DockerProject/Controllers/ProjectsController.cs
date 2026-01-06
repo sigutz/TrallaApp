@@ -1,5 +1,6 @@
 using DockerProject.Data;
 using DockerProject.Models;
+using DockerProject.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -11,12 +12,13 @@ namespace DockerProject.Controllers;
 public class ProjectsController(
     ApplicationDbContext context,
     UserManager<ApplicationUser> userManager,
-    RoleManager<IdentityRole> roleManager) : Controller
+    RoleManager<IdentityRole> roleManager,
+    ISummaryAnalysisService summaryService) : Controller
 {
     private readonly ApplicationDbContext _db = context;
     private readonly UserManager<ApplicationUser> _userManager = userManager;
     private readonly RoleManager<IdentityRole> _roleManager = roleManager;
-
+    private readonly ISummaryAnalysisService _summaryService = summaryService;
 
     [NonAction]
     private void SetAccesRights()
@@ -470,5 +472,42 @@ public class ProjectsController(
 
         return Json(new { success = true, fields = newFieldsData });
     }
-    
+
+    public async Task<IActionResult> GetAiDescription(string projectId)
+    {
+        Project? project = _db.Projects
+            .Include(p => p.Founder)
+            .Include(p => p.Fields)
+            .Include(p => p.StarredBy)
+            .Include(p => p.Tasks)
+            .ThenInclude(t => t.Users)
+            .Include(p => p.Tasks)
+            .ThenInclude(t => t.Tags)
+            .Include(p => p.Tasks)
+            .ThenInclude(t => t.Comments)
+            .Include(p => p.Comments)
+            .ThenInclude(c => c.Author)
+            .Include(p => p.Comments)
+            .ThenInclude(c => c.Votes)
+            .Include(p => p.Members)
+            .ThenInclude(m => m.Member)
+            .FirstOrDefault(p => p.Id == projectId);
+        
+        if (project is null)
+            return NotFound();
+
+        var summaryResult = await _summaryService.AnalysisServiceAsync(project);
+
+        if (summaryResult.Success)
+        {
+            project.AISummaryOverAll = summaryResult.OverAll;
+            project.AiSummaryTasks = summaryResult.Tasks;
+            project.AiSummaryMembers = summaryResult.Members;
+            project.AiSummaryProblemsIdentifyInComments = summaryResult.ProblemsIdentifyInComments;
+            project.SummaryRealizedAt = DateTime.Now;
+        }
+
+        _db.SaveChanges();
+        return Redirect("/Projects/Show/"+ projectId);
+    }
 }

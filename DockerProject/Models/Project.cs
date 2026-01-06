@@ -25,4 +25,13 @@ public class Project
     public virtual ICollection<ProjectTask> Tasks { get; set; } = new List<ProjectTask>();
 
     public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
+
+    public string? AISummaryOverAll { get; set; } = string.Empty;
+    public string? AiSummaryMembers { get; set; } = string.Empty;
+    public string? AiSummaryTasks { get; set; } = string.Empty;
+    public string? AiSummaryProblemsIdentifyInComments { get; set; } = string.Empty;
+    
+    public DateTime? SummaryRealizedAt { get; set; }
+
+    
 }
