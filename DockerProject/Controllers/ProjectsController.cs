@@ -54,28 +54,29 @@ public class ProjectsController(
         {
             projects = projects.Where(p => p.Title.Contains(search) || p.Description.Contains(search));
         }
+
         int perPage = 8;
         var offset = 0;
         int currentPage = page < 1 ? 1 : page;
-        
-        if (currentPage != 0 )
+
+        if (currentPage != 0)
         {
             offset = (currentPage - 1) * perPage;
         }
 
         var paginatedProjects = projects.Skip(offset).Take(perPage);
-        
+
         ViewBag.CurrentStar = star;
         ViewBag.CurrentUser = user;
         ViewBag.CurrentSearch = search;
         ViewBag.Projects = paginatedProjects;
-        
+
         int totalItems = projects.Count();
         var lastPage = (int)Math.Ceiling((double)totalItems / perPage);
-        
+
         ViewBag.CurrentPage = page;
         ViewBag.LastPage = lastPage;
-        
+
 
         if (TempData.ContainsKey("message"))
         {
@@ -318,7 +319,7 @@ public class ProjectsController(
         _db.SaveChanges();
         return Json(new { success = true, isActionAsk });
     }
-    
+
     [HttpPost]
     [Authorize]
     public IActionResult InviteUser2Project(string projectId, string userId)
@@ -343,7 +344,6 @@ public class ProjectsController(
                 Status = ProjectMemberStatus.Invited
             };
             _db.ProjectMembers.Add(projectMember);
-
         }
         else
         {
@@ -351,10 +351,9 @@ public class ProjectsController(
             {
                 projectMember.Status = ProjectMemberStatus.Accepted;
                 _db.ProjectMembers.Add(projectMember);
-
             }
         }
-        
+
         _db.SaveChanges();
         return Json(new { success = true });
     }
@@ -403,22 +402,22 @@ public class ProjectsController(
 
         return Json(new { success = true });
     }
-    
-    
+
+
     [Authorize]
     [HttpPost]
     public async Task<IActionResult> EditTitle(string projectId, string newTitle)
     {
         var project = await _db.Projects.FirstOrDefaultAsync(p => p.Id == projectId);
-        
+
         if (project == null) return NotFound();
-        
+
         if (project.FounderId != _userManager.GetUserId(User) && !User.IsInRole("Admin"))
             return Forbid();
-        
+
         project.Title = newTitle;
         await _db.SaveChangesAsync();
-        
+
         return Json(new { success = true });
     }
 
@@ -427,15 +426,15 @@ public class ProjectsController(
     public async Task<IActionResult> EditDescription(string projectId, string description)
     {
         var project = await _db.Projects.FirstOrDefaultAsync(p => p.Id == projectId);
-        
+
         if (project == null) return NotFound();
 
         if (project.FounderId != _userManager.GetUserId(User) && !User.IsInRole("Admin"))
             return Forbid();
-        
+
         project.Description = description;
         await _db.SaveChangesAsync();
-        
+
         return Json(new { success = true });
     }
 
@@ -467,12 +466,14 @@ public class ProjectsController(
         }
 
         await _db.SaveChangesAsync();
-        
+
         var newFieldsData = project.Fields.Select(f => new { f.Title, f.HexColor }).ToList();
 
         return Json(new { success = true, fields = newFieldsData });
     }
 
+    [HttpPost]
+    [Authorize]
     public async Task<IActionResult> GetAiDescription(string projectId)
     {
         Project? project = _db.Projects
@@ -492,10 +493,22 @@ public class ProjectsController(
             .Include(p => p.Members)
             .ThenInclude(m => m.Member)
             .FirstOrDefault(p => p.Id == projectId);
-        
+
         if (project is null)
             return NotFound();
 
+        bool isSomethingNew = project.Tasks.Any(t => t.AssignedDate > project.SummaryRealizedAt) ||
+                              project.Comments
+                                  .Where(c => c.Date > project.SummaryRealizedAt)
+                                  .Sum(c => c.Votes.Count) + project.Tasks
+                                  .SelectMany(t => t.Comments)
+                                  .Where(c => c.Date > project.SummaryRealizedAt)
+                                  .Sum(c => c.Votes.Count) > 2;
+
+        if (!isSomethingNew)
+            return Json(new { success = false });
+        
+        
         var summaryResult = await _summaryService.AnalysisServiceAsync(project);
 
         if (summaryResult.Success)
@@ -508,6 +521,10 @@ public class ProjectsController(
         }
 
         _db.SaveChanges();
-        return Redirect("/Projects/Show/"+ projectId);
+        return Json(new
+        {
+            success = true, overAll = summaryResult.OverAll, tasks = summaryResult.Tasks,
+            members = summaryResult.Members, problems = summaryResult.ProblemsIdentifyInComments
+        });
     }
 }

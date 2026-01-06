@@ -104,7 +104,9 @@ public class GoogleSummaryAnalysisService : ISummaryAnalysisService
                 RULES:
                 - Escape all double quotes within the content strings to ensure valid JSON.
                 - If a section has no relevant data (e.g., no problems found), state ""No major issues identified based on available data.""
-                - Keep the tone professional, objective, and analytical.";
+                - Keep the tone professional, objective, and analytical.
+                - FORMATTING: Strictly use the literal escape sequence '\n' to separate distinct thoughts or list items within the string values.
+                Do not use actual carriage returns or Markdown formatting; rely exclusively on '\n' to provide visual structure for the UI parser.";
 
             var userPrompt = $"Analyze the JSON representation of this Project:\"{Helper.GetProjectJson(project)}\"";
 

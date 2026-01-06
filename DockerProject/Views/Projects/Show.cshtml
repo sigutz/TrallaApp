@@ -27,12 +27,8 @@
     var userStarProject = Model.StarredBy.FirstOrDefault(s => s.Id == currentUserId);
     var starIcon = userStarProject != null ? "bi-star-fill" : "bi-star";
 }
-<div>
-    @Model.AISummaryOverAll
-</div>
-<div>
-    <a asp-controller="Projects" asp-action="GetAiDescription" asp-route-projectId="@Model.Id">aici</a>
-</div>
+<partial name="_AISummary.cshtml" model="@Model"/>
+
 <div class="container mt-5">
     <div class="row justify-content-center">
         <div class="col-md-10">
