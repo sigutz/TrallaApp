@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using DockerProject.Data;
 using DockerProject.Models;
 using DotNetEnv;
-
+using DockerProject.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 Env.Load(); //pt siguranta
@@ -24,6 +24,7 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.R
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
 builder.Services.AddControllersWithViews();
+builder.Services.AddScoped<ISummaryAnalysisService, GoogleSummaryAnalysisService>();
 
 var app = builder.Build();
 
