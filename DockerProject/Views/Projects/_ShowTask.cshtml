@@ -529,11 +529,44 @@
 </div>
 
 <script>
-    // Scriptul de activare
-    window.addEventListener('load', function () {
-        // Folosim clasele native Bootstrap 5 pentru JS daca jQuery nu e preferat, 
-        // dar pastrez stilul jQuery folosit de tine in exemplu:
-        $('#btn-launch-task-modal-@Model.Id').click(() => $('#task-modal-@Model.Id').modal('show'));
-        $('#btn-close-task-modal-@Model.Id').click(() => $('#task-modal-@Model.Id').modal('hide'));
+    document.addEventListener('click', function (e) {
+        
+        // --- 1. Logic to OPEN the modal ---
+        const launchBtn = e.target.closest('button[id^="btn-launch-task-modal-"]');
+        
+        if (launchBtn) {
+            e.preventDefault();
+            e.stopPropagation(); // Stop bubbling
+
+            const taskId = launchBtn.id.substring('btn-launch-task-modal-'.length);
+            const modalEl = document.getElementById(`task-modal-${taskId}`);
+
+            if (modalEl) {
+                let modal = bootstrap.Modal.getInstance(modalEl);
+                if (!modal) {
+                    modal = new bootstrap.Modal(modalEl, {
+                        backdrop: 'static',
+                        keyboard: true
+                    });
+                }
+                modal.show();
+            }
+            return; // Exit function so we don't trigger other checks
+        }
+
+        // --- 2. Logic to CLOSE the modal (Fix) ---
+        const closeBtn = e.target.closest('button[id^="btn-close-task-modal-"]');
+        
+        if (closeBtn) {
+            const taskId = closeBtn.id.substring('btn-close-task-modal-'.length);
+            const modalEl = document.getElementById(`task-modal-${taskId}`);
+            
+            if (modalEl) {
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) {
+                    modal.hide();
+                }
+            }
+        }
     });
 </script>

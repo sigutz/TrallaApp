@@ -57,15 +57,18 @@ public class ProjectTasksController : Controller
         await _db.SaveChangesAsync();
 
         // Reload task to ensure relationships (like Tags/Comments) are null-safe for the View
-        // Although a new task has none, the partial might check for them.
+        // Although a new task has none, the partial might check for them.SS
         var taskForView = await _db.Tasks
             .Include(t => t.Tags)
             .Include(t => t.Comments)
             .Include(t => t.Users)
             .FirstOrDefaultAsync(t => t.Id == task.Id);
 
+        ViewBag.canEdit =
+            project.FounderId == _userManager.GetUserId(User)
+            || User.IsInRole("Admin");
         // Render the _ShowTask partial to a string
-        string htmlString = await RenderViewAsync("~/Views/Shared/_ShowTask.cshtml", taskForView, true);
+        string htmlString = await RenderViewAsync("~/Views/Projects/_ShowTask.cshtml", taskForView, true);
 
         return Json(new { success = true, html = htmlString });
     }
