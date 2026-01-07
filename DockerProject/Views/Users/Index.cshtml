@@ -1,39 +1,202 @@
+@model List<UserViewModel>
 @{
-    ViewData["Title"] = "Dashboard";
+    ViewData["Title"] = "Gestionare Utilizatori";
+    Layout = "_Layout";
 }
-@using Microsoft.AspNetCore.Identity
-@using DockerProject.Models 
-@inject UserManager<ApplicationUser> MyUserManager
-<div class="container mt-5">
-    <h1>Dashboard</h1>
-    <hr />
-    <div class="row">
-        <div class="col-md-12">
-            <h3>Welcome, @User.Identity?.Name!</h3>
-            <p>This is your custom dashboard area.</p>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-people-fill"></i> Gestionare Utilizatori</h2>
+        
+        <form method="get" asp-action="Index" class="d-flex">
+            <input type="text" name="search" value="@ViewBag.Search" 
+                   class="form-control me-2" placeholder="Caută utilizator..."/>
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-search"></i> Caută
+            </button>
+        </form>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Utilizator</th>
+                            <th>Email</th>
+                            <th>Email Confirmat</th>
+                            <th>Roluri</th>
+                            <th>Proiecte Create</th>
+                            <th>Membru în</th>
+                            <th class="text-center">Acțiuni</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Any())
+                        {
+                            @foreach (var user in Model)
+                            {
+                                <tr id="user-row-@user.Id">
+                                    <td>
+                                        <strong>@user.UserName</strong>
+                                    </td>
+                                    <td>@user.Email</td>
+                                    <td>
+                                        <button class="btn btn-sm @(user.EmailConfirmed ? "btn-success" : "btn-warning")" 
+                                                onclick="toggleEmailConfirmation('@user.Id')">
+                                            @if (user.EmailConfirmed)
+                                            {
+                                                <i class="bi bi-check-circle-fill"></i>
+                                                <span>Confirmat</span>
+                                            }
+                                            else
+                                            {
+                                                <i class="bi bi-x-circle-fill"></i>
+                                                <span>Neconfirmat</span>
+                                            }
+                                        </button>
+                                    </td>
+                                    <td>
+                                        @if (user.Roles.Any())
+                                        {
+                                            @foreach (var role in user.Roles)
+                                            {
+                                                <span class="badge @GetRoleBadgeClass(role) me-1">@role</span>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Fără rol</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary">@user.ProjectsCreated</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">@user.ProjectsMember</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group" role="group">
+                                            <a asp-action="Details" asp-route-id="@user.Id" 
+                                               class="btn btn-sm btn-outline-info" title="Detalii">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a asp-action="Edit" asp-route-id="@user.Id" 
+                                               class="btn btn-sm btn-outline-warning" title="Editează">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <button onclick="deleteUser('@user.Id', '@user.UserName')" 
+                                                    class="btn btn-sm btn-outline-danger" title="Șterge">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">
+                                    Nu există utilizatori înregistrați.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
-    
-    <div class="row mt-4">
-        <div class="col-md-4">
-            <div class="card text-white bg-primary mb-3">
-                <div class="card-header">Projects</div>
-                <div class="card-body">
-                    <h5 class="card-title">Manage Projects</h5>
-                    <p class="card-text">View and edit your current projects.</p>
-                    <a asp-controller="Projects" asp-action="Index" asp-route-user="@MyUserManager.GetUserId(User)" class="btn btn-light">Go to Projects</a>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-md-4">
-            <div class="card bg-light mb-3">
-                <div class="card-header">Tasks</div>
-                <div class="card-body">
-                    <h5 class="card-title">Active tasks</h5>
-                    <p class="card-text">To be added</p>
-                </div>
-            </div>
-        </div>
+
+    <div class="mt-3 text-muted">
+        <small>Total utilizatori: <strong>@Model.Count</strong></small>
     </div>
 </div>
+
+@functions {
+    string GetRoleBadgeClass(string role)
+    {
+        return role switch
+        {
+            "Admin" => "bg-danger",
+            "Editor" => "bg-warning",
+            "User" => "bg-success",
+            _ => "bg-secondary"
+        };
+    }
+}
+
+<script>
+    function toggleEmailConfirmation(userId) {
+        if (!confirm('Sigur doriți să schimbați statusul de confirmare email?')) return;
+
+        fetch('/Users/ToggleEmailConfirmation', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `userId=${userId}&__RequestVerificationToken=${document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Eroare la actualizarea statusului!');
+            }
+        })
+        .catch(error => {
+            alert('Eroare de conexiune!');
+            console.error(error);
+        });
+    }
+
+    function deleteUser(userId, userName) {
+        if (!confirm(`Sigur doriți să ștergeți utilizatorul "${userName}"?\n\nAceastă acțiune este IREVERSIBILĂ!`)) return;
+
+        const formData = new FormData();
+        formData.append('id', userId);
+
+        fetch('/Users/Delete', {
+            method: 'POST',
+            headers: {
+                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('user-row-' + userId).remove();
+                alert(data.message);
+            } else {
+                alert(data.message || 'Eroare la ștergerea utilizatorului!');
+            }
+        })
+        .catch(error => {
+            alert('Eroare de conexiune!');
+            console.error(error);
+        });
+    }
+</script>
+
+<form method="post" style="display:none;">
+    @Html.AntiForgeryToken()
+</form>

@@ -1,0 +1,283 @@
+@model AdminDashboardViewModel
+@{
+    ViewData["Title"] = "Admin Dashboard";
+    Layout = "_Layout";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h2><i class="bi bi-speedometer2"></i> Admin Dashboard</h2>
+            <p class="text-muted">Panou de control pentru administrarea platformei</p>
+        </div>
+    </div>
+
+    <!-- Statistici Generale -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card shadow-sm border-primary">
+                <div class="card-body text-center">
+                    <i class="bi bi-people-fill text-primary" style="font-size: 3rem;"></i>
+                    <h3 class="mt-2">@Model.TotalUsers</h3>
+                    <p class="text-muted mb-0">Utilizatori Înregistrați</p>
+                    <a asp-controller="Users" asp-action="Index" class="btn btn-sm btn-outline-primary mt-2">
+                        Gestionează <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-success">
+                <div class="card-body text-center">
+                    <i class="bi bi-folder-fill text-success" style="font-size: 3rem;"></i>
+                    <h3 class="mt-2">@Model.TotalProjects</h3>
+                    <p class="text-muted mb-0">Proiecte Create</p>
+                    <a asp-action="AllProjects" class="btn btn-sm btn-outline-success mt-2">
+                        Vezi Toate <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-info">
+                <div class="card-body text-center">
+                    <i class="bi bi-list-task text-info" style="font-size: 3rem;"></i>
+                    <h3 class="mt-2">@Model.TotalTasks</h3>
+                    <p class="text-muted mb-0">Task-uri Total</p>
+                    <a asp-action="AllTasks" class="btn btn-sm btn-outline-info mt-2">
+                        Vezi Toate <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-warning">
+                <div class="card-body text-center">
+                    <i class="bi bi-chat-left-text text-warning" style="font-size: 3rem;"></i>
+                    <h3 class="mt-2">@Model.TotalComments</h3>
+                    <p class="text-muted mb-0">Comentarii</p>
+                    <a asp-action="AllComments" class="btn btn-sm btn-outline-warning mt-2">
+                        Vezi Toate <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistici Secundare -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6 class="text-muted">Task-uri Completate</h6>
+                    <div class="d-flex align-items-center">
+                        <h4 class="mb-0 text-success">@Model.CompletedTasks</h4>
+                        <span class="ms-auto text-muted">/@Model.TotalTasks total</span>
+                    </div>
+                    <div class="progress mt-2" style="height: 5px;">
+                        <div class="progress-bar bg-success" 
+                             style="width: @(Model.TotalTasks > 0 ? (Model.CompletedTasks * 100.0 / Model.TotalTasks) : 0)%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6 class="text-muted">Task-uri În Progres</h6>
+                    <div class="d-flex align-items-center">
+                        <h4 class="mb-0 text-primary">@Model.InProgressTasks</h4>
+                        <span class="ms-auto text-muted">/@Model.TotalTasks total</span>
+                    </div>
+                    <div class="progress mt-2" style="height: 5px;">
+                        <div class="progress-bar bg-primary" 
+                             style="width: @(Model.TotalTasks > 0 ? (Model.InProgressTasks * 100.0 / Model.TotalTasks) : 0)%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6 class="text-muted">Cereri de Membru Pending</h6>
+                    <div class="d-flex align-items-center">
+                        <h4 class="mb-0 text-warning">@Model.PendingMemberships</h4>
+                        <span class="ms-auto">
+                            @if (Model.PendingMemberships > 0)
+                            {
+                                <span class="badge bg-warning">Necesită atenție</span>
+                            }
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Proiecte Recente -->
+        <div class="col-md-6 mb-3">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="bi bi-folder"></i> Proiecte Recente
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.RecentProjects.Any())
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var project in Model.RecentProjects)
+                            {
+                                <div class="list-group-item px-0">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6 class="mb-1">@project.Title</h6>
+                                            <small class="text-muted">
+                                                de @project.Founder?.UserName • 
+                                                @project.CreatedDate.ToString("dd MMM yyyy")
+                                            </small>
+                                        </div>
+                                        <div>
+                                            <a asp-controller="Projects" asp-action="Show" asp-route-id="@project.Id" 
+                                               class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a asp-controller="Projects" asp-action="Edit" asp-route-id="@project.Id" 
+                                               class="btn btn-sm btn-outline-warning">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted mb-0">Nu există proiecte recente.</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Utilizatori Recenți -->
+        <div class="col-md-6 mb-3">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="bi bi-person-plus"></i> Utilizatori Recenți
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.RecentUsers.Any())
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var user in Model.RecentUsers)
+                            {
+                                <div class="list-group-item px-0">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-1">@user.UserName</h6>
+                                            <small class="text-muted">@user.Email</small>
+                                        </div>
+                                        <div>
+                                            <a asp-controller="Users" asp-action="Details" asp-route-id="@user.Id" 
+                                               class="btn btn-sm btn-outline-info">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a asp-controller="Users" asp-action="Edit" asp-route-id="@user.Id" 
+                                               class="btn btn-sm btn-outline-warning">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted mb-0">Nu există utilizatori recenți.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Comentarii Recente -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="bi bi-chat-left-text"></i> Comentarii Recente
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.RecentComments.Any())
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var comment in Model.RecentComments)
+                            {
+                                <div class="list-group-item px-0">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="flex-grow-1">
+                                            <p class="mb-1">@comment.Content</p>
+                                            <small class="text-muted">
+                                                de <strong>@comment.Author?.UserName</strong> • 
+                                                @comment.Date.ToString("dd MMM yyyy HH:mm")
+                                                @if (comment.ProjectParent != null)
+                                                {
+                                                    <span> în <strong>@comment.ProjectParent.Title</strong></span>
+                                                }
+                                            </small>
+                                        </div>
+                                        <button onclick="deleteComment('@comment.Id')" 
+                                                class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted mb-0">Nu există comentarii recente.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function deleteComment(commentId) {
+        if (!confirm('Sigur doriți să ștergeți acest comentariu?')) return;
+
+        fetch('/Admin/DeleteComment/' + commentId, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'Eroare la ștergerea comentariului!');
+            }
+        })
+        .catch(error => {
+            alert('Eroare de conexiune!');
+            console.error(error);
+        });
+    }
+</script>

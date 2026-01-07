@@ -1,0 +1,205 @@
+@model List<DockerProject.Models.Comment>
+@{
+    ViewData["Title"] = "Toate Comentariile";
+    Layout = "_Layout";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="bi bi-chat-left-text-fill"></i> Toate Comentariile</h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a asp-controller="Admin" asp-action="Index">Dashboard</a>
+                    </li>
+                    <li class="breadcrumb-item active">Comentarii</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            @if (Model.Any())
+            {
+                <div class="list-group">
+                    @foreach (var comment in Model)
+                    {
+                        <div class="list-group-item" id="comment-@comment.Id">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1 me-3">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <div class="rounded-circle bg-secondary text-white d-inline-flex align-items-center justify-content-center me-2"
+                                             style="width: 32px; height: 32px; font-size: 0.9rem;">
+                                            @(comment.Author?.UserName?.Substring(0, 1).ToUpper() ?? "?")
+                                        </div>
+                                        <div>
+                                            <strong>@(comment.Author?.UserName ?? "Utilizator șters")</strong>
+                                            <small class="text-muted ms-2">
+                                                @comment.Date.ToString("dd MMM yyyy HH:mm")
+                                                @if (comment.IsEdited)
+                                                {
+                                                    <span class="badge bg-secondary">Editat</span>
+                                                }
+                                            </small>
+                                        </div>
+                                    </div>
+
+                                    <p class="mb-2">@comment.Content</p>
+
+                                    <div class="small text-muted">
+                                        @if (comment.ProjectParent != null)
+                                        {
+                                            <i class="bi bi-folder"></i>
+                                            <span>Proiect: </span>
+                                            <a asp-controller="Projects" asp-action="Show" asp-route-id="@comment.ProjectParentId">
+                                                @comment.ProjectParent.Title
+                                            </a>
+                                        }
+                                        @if (comment.TaskParent != null)
+                                        {
+                                            <span class="ms-2">
+                                                <i class="bi bi-list-task"></i>
+                                                <span>Task: @comment.TaskParent.Name</span>
+                                            </span>
+                                        }
+                                        @if (comment.CommentParentId != null)
+                                        {
+                                            <span class="ms-2">
+                                                <i class="bi bi-reply"></i>
+                                                <span>Reply to comment</span>
+                                            </span>
+                                        }
+                                    </div>
+
+                                    @if (comment.Votes.Any())
+                                    {
+                                        <div class="mt-2">
+                                            <span class="badge bg-light text-dark border">
+                                                <i class="bi bi-arrow-up"></i> @comment.Votes.Count(v => v.IsUpvote)
+                                            </span>
+                                            <span class="badge bg-light text-dark border ms-1">
+                                                <i class="bi bi-arrow-down"></i> @comment.Votes.Count(v => !v.IsUpvote)
+                                            </span>
+                                        </div>
+                                    }
+                                </div>
+
+                                <div>
+                                    <button onclick="deleteComment('@comment.Id')" 
+                                            class="btn btn-sm btn-outline-danger" 
+                                            title="Șterge comentariu">
+                                        <i class="bi bi-trash"></i> Șterge
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="text-center text-muted py-5">
+                    <i class="bi bi-chat-left-text" style="font-size: 3rem;"></i>
+                    <p class="mt-3">Nu există comentarii în sistem.</p>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Paginare -->
+    @if (ViewBag.TotalPages > 1)
+    {
+        <nav class="mt-3">
+            <ul class="pagination justify-content-center">
+                @if (ViewBag.CurrentPage > 1)
+                {
+                    <li class="page-item">
+                        <a class="page-link" asp-action="AllComments" asp-route-page="@(ViewBag.CurrentPage - 1)">
+                            <i class="bi bi-chevron-left"></i> Anterior
+                        </a>
+                    </li>
+                }
+
+                @for (int i = Math.Max(1, ViewBag.CurrentPage - 2); 
+                      i <= Math.Min(ViewBag.TotalPages, ViewBag.CurrentPage + 2); 
+                      i++)
+                {
+                    <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                        <a class="page-link" asp-action="AllComments" asp-route-page="@i">
+                            @i
+                        </a>
+                    </li>
+                }
+
+                @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+                {
+                    <li class="page-item">
+                        <a class="page-link" asp-action="AllComments" asp-route-page="@(ViewBag.CurrentPage + 1)">
+                            Următorul <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                }
+            </ul>
+        </nav>
+    }
+
+    <div class="mt-3">
+        <div class="d-flex justify-content-between align-items-center">
+            <a asp-controller="Admin" asp-action="Index" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Înapoi la Dashboard
+            </a>
+            <small class="text-muted">
+                Total comentarii: <strong>@Model.Count</strong>
+                @if (ViewBag.TotalPages > 1)
+                {
+                    <span> (Pagina @ViewBag.CurrentPage din @ViewBag.TotalPages)</span>
+                }
+            </small>
+        </div>
+    </div>
+</div>
+
+<script>
+    function deleteComment(commentId) {
+        if (!confirm('Sigur doriți să ștergeți acest comentariu?\n\nAceastă acțiune este IREVERSIBILĂ!')) return;
+
+        fetch('/Admin/DeleteComment/' + commentId, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Remove the comment from UI
+                const commentElement = document.getElementById('comment-' + commentId);
+                if (commentElement) {
+                    commentElement.style.transition = 'opacity 0.3s';
+                    commentElement.style.opacity = '0';
+                    setTimeout(() => commentElement.remove(), 300);
+                }
+                
+                // Show success message
+                const alert = document.createElement('div');
+                alert.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
+                alert.style.zIndex = '9999';
+                alert.innerHTML = `
+                    ${data.message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                document.body.appendChild(alert);
+                
+                setTimeout(() => alert.remove(), 3000);
+            } else {
+                alert(data.message || 'Eroare la ștergerea comentariului!');
+            }
+        })
+        .catch(error => {
+            alert('Eroare de conexiune!');
+            console.error(error);
+        });
+    }
+</script>

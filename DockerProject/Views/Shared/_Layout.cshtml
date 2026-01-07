@@ -122,22 +122,44 @@
 
     <span class="sidenav-brand">Tralla</span>
 
-    <a asp-controller="Home" asp-action="Index">
+    <a asp-controller="Dashboard" asp-action="Index">
         <i class="bi bi-house-door"></i> Home
     </a>
     <a asp-controller="Projects" asp-action="Index">
         <i class="bi bi-kanban"></i> Projects
     </a>
-
-    @if (User.Identity != null && User.Identity.IsAuthenticated)
+    
+    @if (User.IsInRole("Admin"))
     {
-    <a asp-controller="Projects" asp-action="Index" asp-route-user="@MyUserManager.GetUserId(User)">
-        <i class="bi bi-person-workspace"></i> My Projects
-    </a>
+        <hr class="text-secondary mx-3" />
+    
+        <a asp-controller="Admin" asp-action="Index">
+            <i class="bi bi-speedometer2"></i> Admin Dashboard
+        </a>
+        <a asp-controller="Dashboard" asp-action="Index">
+            <i class="bi bi-grid-fill"></i> My Dashboard
+        </a>
+    }
+    else
+    {
+        <hr class="text-secondary mx-3" />
+    
+        <a asp-controller="Dashboard" asp-action="Index">
+            <i class="bi bi-grid-fill"></i> My Dashboard
+        </a>
+    }
 
     <hr class="text-secondary mx-3" />
 
-    <a asp-controller="Users" asp-action="Index" title="Manage">
+    @if (User.Identity != null && User.Identity.IsAuthenticated)
+    {
+        <a asp-controller="Projects" asp-action="Index" asp-route-user="@MyUserManager.GetUserId(User)">
+            <i class="bi bi-person-workspace"></i> My Projects
+        </a>
+
+    <hr class="text-secondary mx-3" />
+
+    <a asp-controller="Dashboard" asp-action="Index">
         <i class="bi bi-person-circle"></i> @User.Identity.Name
     </a>
 
