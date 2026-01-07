@@ -1,0 +1,128 @@
+@model EditUserViewModel
+@{
+    ViewData["Title"] = "Editare Utilizator";
+    Layout = "_Layout";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="bi bi-person-gear"></i> Editare Utilizator</h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="Id" />
+
+                        <div class="mb-3">
+                            <label asp-for="UserName" class="form-label">Nume Utilizator</label>
+                            <input asp-for="UserName" class="form-control" required />
+                            <span asp-validation-for="UserName" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label">Email</label>
+                            <input asp-for="Email" type="email" class="form-control" required />
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <input asp-for="EmailConfirmed" class="form-check-input" type="checkbox" />
+                            <label asp-for="EmailConfirmed" class="form-check-label">
+                                Email Confirmat
+                            </label>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Roluri Utilizator</label>
+                            <div class="border rounded p-3 bg-light">
+                                @if (Model.AllRoles != null && Model.AllRoles.Any())
+                                {
+                                    @foreach (var role in Model.AllRoles)
+                                    {
+                                        var isChecked = Model.CurrentRoles.Contains(role);
+                                        <div class="form-check">
+                                            <input class="form-check-input" 
+                                                   type="checkbox" 
+                                                   name="selectedRoles" 
+                                                   value="@role" 
+                                                   id="role_@role"
+                                                   @(isChecked ? "checked" : "") />
+                                            <label class="form-check-label" for="role_@role">
+                                                <span class="badge @GetRoleBadgeClass(role)">@role</span>
+                                                - @GetRoleDescription(role)
+                                            </label>
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <p class="text-muted mb-0">Nu există roluri disponibile.</p>
+                                }
+                            </div>
+                            <small class="text-muted">
+                                <i class="bi bi-info-circle"></i> 
+                                Selectează unul sau mai multe roluri pentru acest utilizator.
+                            </small>
+                        </div>
+
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Înapoi
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> Salvează Modificările
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card mt-3 shadow-sm">
+                <div class="card-header bg-warning">
+                    <h6 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Informații Importante</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li>Modificările rolurilor afectează imediat permisiunile utilizatorului</li>
+                        <li>Nu poți modifica propriile roluri</li>
+                        <li>Un utilizator poate avea mai multe roluri simultan</li>
+                        <li>Utilizatorii fără rol vor avea doar permisiuni de bază</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    string GetRoleBadgeClass(string role)
+    {
+        return role switch
+        {
+            "Admin" => "bg-danger",
+            "Editor" => "bg-warning",
+            "User" => "bg-success",
+            _ => "bg-secondary"
+        };
+    }
+
+    string GetRoleDescription(string role)
+    {
+        return role switch
+        {
+            "Admin" => "Control complet asupra platformei",
+            "Editor" => "Poate edita conținutul",
+            "User" => "Utilizator standard cu permisiuni de bază",
+            _ => "Rol personalizat"
+        };
+    }
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,229 @@
+@model UserDetailsViewModel
+@{
+    ViewData["Title"] = "Detalii Utilizator";
+    Layout = "_Layout";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-person-circle"></i> Informații Utilizator</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        <div class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center"
+                             style="width: 100px; height: 100px; font-size: 3rem;">
+                            @Model.UserName?.Substring(0, 1).ToUpper()
+                        </div>
+                    </div>
+
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Nume:</dt>
+                        <dd class="col-sm-8"><strong>@Model.UserName</strong></dd>
+
+                        <dt class="col-sm-4">Email:</dt>
+                        <dd class="col-sm-8">@Model.Email</dd>
+
+                        <dt class="col-sm-4">Status:</dt>
+                        <dd class="col-sm-8">
+                            @if (Model.EmailConfirmed)
+                            {
+                                <span class="badge bg-success">
+                                    <i class="bi bi-check-circle"></i> Confirmat
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning">
+                                    <i class="bi bi-x-circle"></i> Neconfirmat
+                                </span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-4">Roluri:</dt>
+                        <dd class="col-sm-8">
+                            @if (Model.Roles.Any())
+                            {
+                                @foreach (var role in Model.Roles)
+                                {
+                                    <span class="badge @GetRoleBadgeClass(role) me-1">@role</span>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-muted">Fără rol</span>
+                            }
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0"><i class="bi bi-bar-chart"></i> Statistici</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Proiecte create:</span>
+                        <span class="badge bg-primary">@Model.ProjectsCreated.Count</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Membru în:</span>
+                        <span class="badge bg-info">@Model.Memberships.Count(m => m.Status == ProjectMemberStatus.Accepted)</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Comentarii:</span>
+                        <span class="badge bg-secondary">@Model.RecentComments.Count</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <!-- Proiecte Create -->
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="bi bi-folder-fill"></i> Proiecte Create 
+                        <span class="badge bg-primary">@Model.ProjectsCreated.Count</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.ProjectsCreated.Any())
+                    {
+                        <div class="list-group">
+                            @foreach (var project in Model.ProjectsCreated)
+                            {
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-1">@project.Title</h6>
+                                            <small class="text-muted">
+                                                @project.Tasks.Count task-uri • 
+                                                Creat: @project.CreatedDate.ToString("dd MMM yyyy")
+                                            </small>
+                                        </div>
+                                        <a asp-controller="Projects" asp-action="Show" asp-route-id="@project.Id" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i> Vezi
+                                        </a>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted mb-0">Nu a creat încă proiecte.</p>
+                    }
+                </div>
+            </div>
+
+            <!-- Membru în Proiecte -->
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="bi bi-people-fill"></i> Membru în Proiecte
+                        <span class="badge bg-info">@Model.Memberships.Count(m => m.Status == ProjectMemberStatus.Accepted)</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @{
+                        var acceptedMemberships = Model.Memberships
+                            .Where(m => m.Status == ProjectMemberStatus.Accepted)
+                            .ToList();
+                    }
+
+                    @if (acceptedMemberships.Any())
+                    {
+                        <div class="list-group">
+                            @foreach (var membership in acceptedMemberships)
+                            {
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-1">@membership.Project.Title</h6>
+                                            <small class="text-muted">
+                                                Alaturat: @membership.LastModification.ToString("dd MMM yyyy")
+                                            </small>
+                                        </div>
+                                        <a asp-controller="Projects" asp-action="Show" asp-route-id="@membership.ProjectId" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i> Vezi
+                                        </a>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted mb-0">Nu este membru în niciun proiect.</p>
+                    }
+                </div>
+            </div>
+
+            <!-- Comentarii Recente -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="bi bi-chat-left-text"></i> Comentarii Recente
+                        <span class="badge bg-secondary">@Model.RecentComments.Count</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.RecentComments.Any())
+                    {
+                        <div class="list-group">
+                            @foreach (var comment in Model.RecentComments)
+                            {
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="flex-grow-1">
+                                            <p class="mb-1">@comment.Content</p>
+                                            <small class="text-muted">
+                                                @comment.Date.ToString("dd MMM yyyy HH:mm") •
+                                                @if (comment.ProjectParent != null)
+                                                {
+                                                    <span>în <strong>@comment.ProjectParent.Title</strong></span>
+                                                }
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted mb-0">Nu a adăugat comentarii.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Înapoi la Lista
+        </a>
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">
+            <i class="bi bi-pencil"></i> Editează Utilizator
+        </a>
+    </div>
+</div>
+
+@functions {
+    string GetRoleBadgeClass(string role)
+    {
+        return role switch
+        {
+            "Admin" => "bg-danger",
+            "Editor" => "bg-warning",
+            "User" => "bg-success",
+            _ => "bg-secondary"
+        };
+    }
+}
