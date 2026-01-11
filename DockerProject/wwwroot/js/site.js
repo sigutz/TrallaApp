@@ -372,6 +372,7 @@ function ajaxDeleteComment(id) {
 // AJAX: Edit Comment
 function ajaxEditComment(event, id) {
     event.preventDefault();
+
     let content = document.getElementById('textarea-edit-' + id).value;
     let formData = new FormData();
     formData.append('id', id);
@@ -585,7 +586,7 @@ function ajaxEditTaskStatus(taskId, statusValue) {
 
 function ajaxEditTaskDeadline(taskId, rawDateValue) {
     // rawDateValue comes from datetime-local like "2023-10-25T14:30"
-    if(!rawDateValue) {
+    if (!rawDateValue) {
         alert("Please select a date and time");
         return;
     }
@@ -608,7 +609,7 @@ function ajaxEditTaskDeadline(taskId, rawDateValue) {
 
             // Format date for display (Client side formatting is a bit tricky, simple approach:)
             const dateObj = new Date(rawDateValue);
-            const options = { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit' };
+            const options = {day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'};
             const prettyDate = dateObj.toLocaleDateString('en-GB', options); // Adjust locale as needed
 
             // Update the display text
@@ -672,7 +673,7 @@ function ajaxUploadMedia(taskId, inputElement) {
 }
 
 function ajaxDeleteMedia(taskId) {
-    if(!confirm("Are you sure? This cannot be undone.")) return;
+    if (!confirm("Are you sure? This cannot be undone.")) return;
 
     let formData = new FormData();
     formData.append('taskId', taskId);
@@ -748,7 +749,7 @@ function ajaxAsignOrRemoveUserFromTask(userId, taskId, userName) {
 
                     // Remove "Unassigned" text if it exists
                     const unassignedMsg = document.getElementById(`unassigned-msg-${taskId}`);
-                    if(unassignedMsg) unassignedMsg.remove();
+                    if (unassignedMsg) unassignedMsg.remove();
 
                     listContainer.insertAdjacentHTML('beforeend', newRow);
                 }

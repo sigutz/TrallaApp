@@ -1,24 +1,28 @@
 using System.Diagnostics;
+using DockerProject.Data;
 using Microsoft.AspNetCore.Mvc;
 using DockerProject.Models;
+using DockerProject.Services;
+using Microsoft.AspNetCore.Identity;
 
 namespace DockerProject.Controllers;
 
-public class HomeController : Controller
+public class HomeController(
+    ApplicationDbContext context,
+    UserManager<ApplicationUser> userManager,
+    RoleManager<IdentityRole> roleManager) : Controller
 {
     private readonly ILogger<HomeController> _logger;
 
-    public HomeController(ILogger<HomeController> logger)
-    {
-        _logger = logger;
-    }
+    private readonly ApplicationDbContext _db = context;
+    private readonly UserManager<ApplicationUser> _userManager = userManager;
+    private readonly RoleManager<IdentityRole> _roleManager = roleManager;
 
     public IActionResult Index()
     {
          if (User.Identity is { IsAuthenticated: true })
              return RedirectToAction("Index", "Projects");
-        // merge dar pana cred ca e cel mai ok pana la deployment ul final sa o lasam comentata ca sa putem sa testam
-        return View();
+         return View();
     }
 
     public IActionResult Privacy()
