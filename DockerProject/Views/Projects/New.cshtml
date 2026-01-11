@@ -13,8 +13,8 @@
             <form method="post" asp-action="New" asp-controller="Projects">
 
                 <div class="form-group mb-3">
-                    <label asp-for="Title" class="form-label">Titlu Proiect</label>
-                    <input asp-for="Title" class="form-control"/>
+                    <label asp-for="Title" class="form-label" >Titlu Proiect</label>
+                    <input asp-for="Title" class="form-control" required/>
                     <span asp-validation-for="Title" class="text-danger"></span>
                 </div>
 
@@ -35,8 +35,8 @@
                 </div>
 
                 <div class="form-group mb-3">
-                    <label asp-for="Description" class="form-label">Descrierea Proiectului</label>
-                    <textarea asp-for="Description" class="form-control summernote"></textarea>
+                    <label asp-for="Description" class="form-label"  >Descrierea Proiectului</label>
+                    <textarea asp-for="Description" class="form-control summernote" required></textarea>
                     <span asp-validation-for="Description" class="text-danger"></span>
                 </div>
 

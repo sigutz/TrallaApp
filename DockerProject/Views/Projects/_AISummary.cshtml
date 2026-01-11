@@ -200,30 +200,35 @@
 <div class="sidenav-right" id="AISummary">
     <div class="sidenav-content-wrapper">
         <a href="javascript:void(0)" class="closebtn" onclick="closeAISummary()">&times;</a>
+        @if (Model.SummaryRealizedAt != null)
+        {
+            <div class="summary-block">
+                <strong class="d-block text-white mb-2">Overall Summary</strong>
+                <div id="overAllSummaryText">@Model.AISummaryOverAll</div>
+            </div>
 
-        <div class="summary-block">
-            <strong class="d-block text-white mb-2">Overall Summary</strong>
-            <div id="overAllSummaryText">@Model.AISummaryOverAll</div>
-        </div>
+            <div class="summary-block">
+                <strong class="d-block text-white mb-3">Tasks Analysis</strong>
 
-        <div class="summary-block">
-            <strong class="d-block text-white mb-3">Tasks Analysis</strong>
+                <div id="tasks-container"></div>
 
-            <div id="tasks-container"></div>
+                <input type="hidden" id="raw-task-data" value="@Model.AiSummaryTasks"/>
+            </div>
 
-            <input type="hidden" id="raw-task-data" value="@Model.AiSummaryTasks"/>
-        </div>
+            <div class="summary-block">
+                <strong class="d-block text-white mb-2">Team Members</strong>
+                <div id="membersSummaryText">@Model.AiSummaryMembers</div>
+            </div>
 
-        <div class="summary-block">
-            <strong class="d-block text-white mb-2">Team Members</strong>
-            <div id="membersSummaryText">@Model.AiSummaryMembers</div>
-        </div>
-
-        <div class="summary-block">
-            <strong class="d-block text-white mb-2">Identified Issues</strong>
-            <div id="problemsSummaryText">@Model.AiSummaryProblemsIdentifyInComments</div>
-        </div>
-
+            <div class="summary-block">
+                <strong class="d-block text-white mb-2">Identified Issues</strong>
+                <div id="problemsSummaryText">@Model.AiSummaryProblemsIdentifyInComments</div>
+            </div>
+        }
+        else
+        {
+            <h2 class="d-block text-white mb-2">There is not yet a summary</h2>
+        }
         <a onclick="getAISummary('@Model.Id')" href="javascript:void(0)"
            class="action-btn" id="ai-request-summary-btn">
             <i class="bi bi-cpu"></i> Generate New Summary
@@ -235,7 +240,7 @@
     document.addEventListener("DOMContentLoaded", function () {
         renderTasks();
     });
-    
+
     function renderTasks(directData = null) {
         let rawData = directData;
         if (!rawData) {
@@ -262,7 +267,7 @@
 
         while ((match = regex.exec(rawData)) !== null) {
             foundAny = true;
-            const statusRaw = match[1].trim(); 
+            const statusRaw = match[1].trim();
 
             const content = match[2].trim().replace(/\n/g, "<br>");
 

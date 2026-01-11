@@ -5,22 +5,24 @@ namespace DockerProject.Models;
 public class Comment
 {
     [Key] public string Id { get; set; } = Guid.NewGuid().ToString();
-
-    [MaxLength(5000)] public string Content { get; set; } = string.Empty;
+    
+    [MaxLength(5000)]
+    [RegularExpression(@"^\s*\S.*$", ErrorMessage = "Comment cannot be empty or whitespace only.")]
+    public string Content { get; set; } = string.Empty;
 
     public DateTime Date { get; set; }
-    
+
     public bool IsEdited { get; set; } = false;
 
-    public string AuthorId { get; set; } 
+    public string AuthorId { get; set; }
 
     public virtual ApplicationUser? Author { get; set; }
 
-    public string? CommentParentId { get; set; } 
+    public string? CommentParentId { get; set; }
 
     public virtual Comment? CommentParent { get; set; }
 
-    public string? TaskParentId { get; set; } 
+    public string? TaskParentId { get; set; }
 
     public virtual ProjectTask? TaskParent { get; set; }
 

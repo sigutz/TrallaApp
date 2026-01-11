@@ -4,10 +4,10 @@
 @{
     var currentUserId = UserManager.GetUserId(User);
     var projectFounderId = ViewData["ProjectFounderId"] as string;
-    
+
     var authorName = Model.Author?.UserName ?? "Anonymous";
     var authorInitial = authorName.Length > 0 ? authorName.Substring(0, 1).ToUpper() : "?";
-    
+
     var isProjectOwner = !string.IsNullOrEmpty(currentUserId) && currentUserId == projectFounderId;
     var isCommentAuthor = !string.IsNullOrEmpty(currentUserId) && currentUserId == Model.AuthorId;
     var canEdit = User.IsInRole("Admin") || isProjectOwner || isCommentAuthor;
@@ -15,7 +15,7 @@
     // Vote Logic
     var userVote = Model.Votes.FirstOrDefault(v => v.UserId == currentUserId);
     var voteCount = Model.Votes.Count(v => v.IsUpvote) - Model.Votes.Count(v => !v.IsUpvote);
-    
+
     var isUpvoted = userVote != null && userVote.IsUpvote;
     var isDownvoted = userVote != null && !userVote.IsUpvote;
 
@@ -28,22 +28,27 @@
 }
 
 <div class="d-flex gap-3 mt-3" id="comment-@Model.Id">
-    
+
     <div class="d-flex flex-column align-items-center">
-        <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center flex-shrink-0 shadow-sm" 
-             style="width: 32px; height: 32px; font-size: 0.85rem; font-weight: 600;">
+        <div
+            class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center flex-shrink-0 shadow-sm"
+            style="width: 32px; height: 32px; font-size: 0.85rem; font-weight: 600;">
             @authorInitial
         </div>
-        <div class="flex-grow-1 border-start border-2 mt-2" 
-             style="border-color: #e9ecef; cursor: pointer;" 
+        <div class="flex-grow-1 border-start border-2 mt-2"
+             style="border-color: #e9ecef; cursor: pointer;"
              onclick="toggleChildren('@Model.Id')"></div>
     </div>
 
     <div class="flex-grow-1 pb-2">
-        
+
         <div class="d-flex align-items-center gap-2 mb-1">
             <span class="fw-bold text-dark" style="font-size: 0.9rem;">@authorName</span>
-            @if(isProjectOwner) { <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill" style="font-size: 0.65rem;">OP</span> }
+            @if (isProjectOwner)
+            {
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill"
+                      style="font-size: 0.65rem;">OP</span>
+            }
             <span class="text-muted small" style="font-size: 0.75rem;">• @Model.Date.ToString("MMM dd, HH:mm")</span>
         </div>
 
@@ -52,8 +57,15 @@
         </div>
 
         <div id="to-toggle-edit-@Model.Id" class="d-none mb-2">
-            <form onsubmit="ajaxEditComment(event, '@Model.Id')">
-                <textarea id="textarea-edit-@Model.Id" class="form-control mb-2" rows="2">@Model.Content</textarea>
+            <form onsubmit="ajaxEditComment(event,  '@Model.Id')">
+
+                <textarea asp-for="Content"
+                          id="textarea-edit-@Model.Id"
+                          class="form-control mb-2"
+                          rows="2"></textarea>
+
+                <span asp-validation-for="Content" class="text-danger small"></span>
+
                 <button type="submit" class="btn btn-sm btn-success">Save</button>
                 <button type="button" class="btn btn-sm btn-light" onclick="toggle('edit-@Model.Id')">Cancel</button>
             </form>
@@ -62,15 +74,17 @@
         <div class="d-flex align-items-center gap-3">
             <div class="d-flex align-items-center bg-light rounded-pill border px-1">
                 @* Upvote Button *@
-                <button onclick="voteComment('@Model.Id', true)" class="btn btn-sm btn-link text-decoration-none border-0 py-0 px-2">
+                <button onclick="voteComment('@Model.Id', true)"
+                        class="btn btn-sm btn-link text-decoration-none border-0 py-0 px-2">
                     <i id="icon-up-@Model.Id" class="bi @upIconClass"></i>
                 </button>
-                
+
                 @* Score Number *@
                 <span id="score-@Model.Id" class="fw-bold small mx-1 @scoreClass">@voteCount</span>
-                
+
                 @* Downvote Button *@
-                <button onclick="voteComment('@Model.Id', false)" class="btn btn-sm btn-link text-decoration-none border-0 py-0 px-2">
+                <button onclick="voteComment('@Model.Id', false)"
+                        class="btn btn-sm btn-link text-decoration-none border-0 py-0 px-2">
                     <i id="icon-down-@Model.Id" class="bi @downIconClass"></i>
                 </button>
             </div>
@@ -82,10 +96,19 @@
             @if (canEdit)
             {
                 <div class="dropdown">
-                    <button class="btn btn-sm btn-link text-muted p-0" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></button>
+                    <button class="btn btn-sm btn-link text-muted p-0" data-bs-toggle="dropdown"><i
+                            class="bi bi-three-dots"></i></button>
                     <ul class="dropdown-menu border-0 shadow-sm">
-                        <li><button class="dropdown-item small" onclick="toggle('edit-@Model.Id')"><i class="bi bi-pencil me-2"></i>Edit</button></li>
-                        <li><button class="dropdown-item small text-danger" onclick="ajaxDeleteComment('@Model.Id')"><i class="bi bi-trash me-2"></i>Delete</button></li>
+                        <li>
+                            <button class="dropdown-item small" onclick="toggle('edit-@Model.Id')"><i
+                                    class="bi bi-pencil me-2"></i>Edit
+                            </button>
+                        </li>
+                        <li>
+                            <button class="dropdown-item small text-danger" onclick="ajaxDeleteComment('@Model.Id')"><i
+                                    class="bi bi-trash me-2"></i>Delete
+                            </button>
+                        </li>
                     </ul>
                 </div>
             }
@@ -105,7 +128,10 @@
             @if (Model.ProjectParent?.Comments != null)
             {
                 var replies = Model.ProjectParent.Comments.Where(c => c.CommentParentId == Model.Id).OrderByDescending(c => c.Date);
-                foreach (var reply in replies) { <partial name="~/Views/Comments/_CommentThread.cshtml" model="reply"/> }
+                foreach (var reply in replies)
+                {
+                    <partial name="~/Views/Comments/_CommentThread.cshtml" model="reply"/>
+                }
             }
         </div>
     </div>
